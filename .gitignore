@@ -1,0 +1,49 @@
+# ---------- Gradle / сборка ----------
+*.iml
+.gradle
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+gradle/wrapper/gradle-wrapper.jar
+# (сам .jar wrapper'а обычно наоборот КОММИТЯТ, чтобы сборка работала у всех
+#  без ручной установки Gradle — если у тебя так и задумано, удали строку выше)
+
+# ---------- Android Studio / IntelliJ ----------
+/.idea
+*.swp
+*.swo
+*~
+local.properties
+
+# ---------- Секреты / ключи ----------
+*.jks
+*.keystore
+*.p12
+*.pem
+.env
+.env.*
+!.env.example
+*secrets*
+google-services.json
+key.properties
+
+# ---------- Готовые сборки ----------
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ---------- Логи ----------
+*.log
+hs_err_pid*
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------- Прочее ----------
+*.class
+.kotlin/

@@ -1,4 +1,0 @@
-com.project.puk.test.app-androidTest-0 C:\SpotiPuck\app\build\generated\res\resValues\androidTest\debug
-com.project.puk.test.app-mergeDebugAndroidTestResources-1 C:\SpotiPuck\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
-com.project.puk.test.app-mergeDebugAndroidTestResources-2 C:\SpotiPuck\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
-com.project.puk.test.app-debugAndroidTest-3 C:\SpotiPuck\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
