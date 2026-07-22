@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">@color/spotify_black</color>
+    <color name="on_background">@color/spotify_white</color>
+    <color name="on_primary">#FF000000</color>
+    <color name="on_primary_container">#FFFFDBC8</color>
+    <color name="on_surface">@color/spotify_white</color>
+    <color name="on_surface_variant">@color/spotify_light_gray</color>
+    <color name="primary">#FF6A00</color>
+    <color name="primary_container">#FF331500</color>
+    <color name="spotify_black">#FF000000</color>
+    <color name="spotify_dark_gray">#FF121212</color>
+    <color name="spotify_light_gray">#FFB3B3B3</color>
+    <color name="spotify_medium_gray">#FF282828</color>
+    <color name="spotify_orange">#FF6A00</color>
+    <color name="spotify_white">#FFFFFFFF</color>
+    <color name="status_bar">#FF000000</color>
+    <color name="surface">@color/spotify_black</color>
+    <color name="surface_variant">#FF1A1A1A</color>
+    <string name="about_footer">Developed by Mirox921 &amp; reversed Spotifuck app by Deviato.</string>
+    <string name="amoled_theme_subtitle">Pure black background (saves battery)</string>
+    <string name="amoled_theme_title">AMOLED Theme</string>
+    <string name="android_auto_subtitle">Media metadata for notifications</string>
+    <string name="android_auto_title">Android Auto Controls</string>
+    <string name="app_name">SpotiPuk</string>
+    <string name="app_version_title">SpotiPuk Version</string>
+    <string name="autoplay_disabled">Disabled</string>
+    <string name="autoplay_mode_title">AutoPlay Mode</string>
+    <string name="autoplay_onetime">One time at start</string>
+    <string name="autoplay_permanent">Permanent</string>
+    <string name="back">Back</string>
+    <string name="bt_pause_subtitle">Pause when BT/headphones disconnect</string>
+    <string name="bt_pause_title">Pause on Disconnect</string>
+    <string name="bt_resume_subtitle">Resume when BT device connects</string>
+    <string name="bt_resume_title">Resume on Connect</string>
+    <string name="ca_cert_subtitle">Re-export proxy certificate to Downloads</string>
+    <string name="ca_cert_title">CA Certificate</string>
+    <string name="cancel_timer">Cancel Timer</string>
+    <string name="cert_explanation">SpotiPuk uses a local certificate to bypass Spotify\'s WebView restrictions. Install it once to continue.</string>
+    <string name="cert_step1">Tap "Export .pem" below to save the certificate to Downloads</string>
+    <string name="cert_step2">Go to Settings > Security > Encryption &amp; credentials > Install a certificate > CA certificate</string>
+    <string name="cert_step3">Select the file SpotiPuk_CA.pem from your Downloads folder</string>
+    <string name="cert_step4">When prompted, choose "Install anyway"</string>
+    <string name="cert_step5">Come back here and tap "Check" below</string>
+    <string name="certificate_required">Certificate Required</string>
+    <string name="check_btn">Check</string>
+    <string name="check_updates_subtitle">Manually check for new releases</string>
+    <string name="check_updates_title">Check for Updates</string>
+    <string name="checking_certificate">Checking certificate…</string>
+    <string name="clear_cache_dialog_confirm">Clear Cache</string>
+    <string name="clear_cache_dialog_msg">This will clear the WebView cache. Continue?</string>
+    <string name="clear_data_dialog_confirm">Clear All Data</string>
+    <string name="clear_data_dialog_msg">All cookies and login data will be deleted. On restart you will need to log in again. Continue?</string>
+    <string name="close_now_playing_subtitle">Auto-close the Now Playing panel</string>
+    <string name="close_now_playing_title">Always Close Now Playing</string>
+    <string name="custom_css_dialog_title">Custom CSS Hack</string>
+    <string name="custom_css_hint">/* Enter CSS code here */</string>
+    <string name="custom_css_none">None configured</string>
+    <string name="custom_css_title">Custom CSS</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_close">Close</string>
+    <string name="dialog_save">Save</string>
+    <string name="download_update">Download</string>
+    <string name="empty_cache_data_subtitle">Clear everything and log out</string>
+    <string name="empty_cache_data_title">Empty Cache &amp; Login Data</string>
+    <string name="empty_cache_subtitle">Useful if player navigation is slow</string>
+    <string name="empty_cache_title">Empty Cache</string>
+    <string name="export_pem">Export .pem</string>
+    <string name="github_title">GitHub Repository</string>
+    <string name="gui_mode_bigwindow">Wide Window</string>
+    <string name="gui_mode_csshack">Mobile CSS + JS</string>
+    <string name="gui_mode_none">None</string>
+    <string name="gui_mode_title">GUI Hack Mode</string>
+    <string name="material_you_subtitle">Use Android system dynamic colors</string>
+    <string name="material_you_title">Material You Theme</string>
+    <string name="section_about">ABOUT</string>
+    <string name="section_appearance">APPEARANCE</string>
+    <string name="section_bluetooth">BLUETOOTH</string>
+    <string name="section_player">PLAYER</string>
+    <string name="section_security">SECURITY &amp; NETWORK</string>
+    <string name="section_system">SYSTEM</string>
+    <string name="section_updates">UPDATES</string>
+    <string name="set_timer">Set Timer</string>
+    <string name="settings_title">Settings</string>
+    <string name="sleep_timer_title">Sleep Timer</string>
+    <string name="swipe_stop_subtitle">Kill background service from recents</string>
+    <string name="swipe_stop_title">Swipe to Stop Service</string>
+    <string name="system_webview">System WebView</string>
+    <string name="take_control_subtitle">Auto-accept \'Take Control\' prompt</string>
+    <string name="take_control_title">Take Player Control</string>
+    <string name="timer_10min">10 min</string>
+    <string name="timer_15min">15 min</string>
+    <string name="timer_30min">30 min</string>
+    <string name="timer_5min">5 min</string>
+    <string name="timer_60min">60 min</string>
+    <string name="timer_active">Timer active</string>
+    <string name="timer_off">Off</string>
+    <string name="timer_remaining">%1$d:%2$02d min remaining</string>
+    <string name="update_available">New version available: v%1$s (Current: v%2$s)</string>
+    <string name="update_dialog_title">Update Check</string>
+    <string name="update_latest">You are using the latest version of SpotiPuk (v%1$s).</string>
+    <string name="webview_engine_title">WebView Engine</string>
+    <string name="webview_info_dialog_title">WebView &amp; Session Info</string>
+    <style name="Theme.SpotiPuk" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+
+        
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+
+        
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/on_background</item>
+
+        
+        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:navigationBarColor">@color/status_bar</item>
+
+        
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+
+        
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

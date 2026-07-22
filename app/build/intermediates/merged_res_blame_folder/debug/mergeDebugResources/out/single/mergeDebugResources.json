@@ -1,0 +1,146 @@
+[
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_settings.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_light.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_light.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_pause.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_pause.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_notification.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_notification.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_bold.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_bold.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_app_launcher_icon_1784718834434.jpg.flat",
+        "source": "com.project.puk.app-main-6:/drawable/app_launcher_icon_1784718834434.jpg"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/xml_backup_rules.xml.flat",
+        "source": "com.project.puk.app-main-6:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_main_logo.jpg.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_main_logo.jpg"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_medium.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_medium.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-xhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_black.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_black.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_github.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_github.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_favorite_filled.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_favorite_filled.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_regular.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_regular.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_play.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_play.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/xml_data_extraction_rules.xml.flat",
+        "source": "com.project.puk.app-main-6:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_skip_prev.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_skip_prev.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_skip_next.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_skip_next.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-hdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-hdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/xml_automotive_app_desc.xml.flat",
+        "source": "com.project.puk.app-main-6:/xml/automotive_app_desc.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_semibold.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_semibold.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/layout_service_disabled.xml.flat",
+        "source": "com.project.puk.app-main-6:/layout/service_disabled.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-mdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-mdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_favorite.xml.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_favorite.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_thin.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_thin.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_img_spotipuk_logo_1784716620319.jpg.flat",
+        "source": "com.project.puk.app-main-6:/drawable/img_spotipuk_logo_1784716620319.jpg"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/xml_network_security_config.xml.flat",
+        "source": "com.project.puk.app-main-6:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_extrabold.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_extrabold.ttf"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.project.puk.app-main-6:/mipmap-xxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/drawable_ic_app_icon_fg.png.flat",
+        "source": "com.project.puk.app-main-6:/drawable/ic_app_icon_fg.png"
+    },
+    {
+        "merged": "com.project.puk.app-debug-4:/font_saira_extralight.ttf.flat",
+        "source": "com.project.puk.app-main-6:/font/saira_extralight.ttf"
+    }
+]
