@@ -47,9 +47,9 @@ import javax.net.ssl.SSLSocketFactory
 object LocalProxyManager {
     private const val TAG = "LocalProxy"
     private const val KEYSTORE_FILE = "proxy_ca.p12"
-    private const val KEYSTORE_PREFS = "spotilol_secure_prefs"
+    private const val KEYSTORE_PREFS = "spotipuk_secure_prefs"
     private const val KEY_PASSWORD = "keystore_password"
-    private const val CA_ALIAS = "spotilol-ca"
+    private const val CA_ALIAS = "spotipuk-ca"
     private const val KEYSTORE_TYPE = "PKCS12"
 
     private var serverSocket: ServerSocket? = null
@@ -126,7 +126,7 @@ object LocalProxyManager {
         kpg.initialize(2048, SecureRandom())
         caKeyPair = kpg.generateKeyPair()
 
-        val name = X500Name("CN=Spotilol Proxy CA, O=Spotilol")
+        val name = X500Name("CN=SpotiPuk Proxy CA, O=SpotiPuk")
         val serial = BigInteger.valueOf(System.currentTimeMillis())
         val notBefore = Date()
         val notAfter = Date(notBefore.time + 365L * 24 * 60 * 60 * 1000L * 10)
@@ -596,10 +596,10 @@ object LocalProxyManager {
 
             val ks = KeyStore.getInstance(KEYSTORE_TYPE)
             ks.load(null, null)
-            ks.setKeyEntry("leaf", domainKeyPair.private, "spotilol".toCharArray(), arrayOf(domainCert, caCert))
+            ks.setKeyEntry("leaf", domainKeyPair.private, "spotipuk".toCharArray(), arrayOf(domainCert, caCert))
 
             val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
-            kmf.init(ks, "spotilol".toCharArray())
+            kmf.init(ks, "spotipuk".toCharArray())
 
             val sslContext = SSLContext.getInstance("TLS")
             sslContext.init(kmf.keyManagers, null, SecureRandom())
@@ -614,7 +614,7 @@ object LocalProxyManager {
         kpg.initialize(2048, SecureRandom())
         val domainKeyPair = kpg.generateKeyPair()
 
-        val issuer = X500Name("CN=Spotilol Proxy CA, O=Spotilol")
+        val issuer = X500Name("CN=SpotiPuk Proxy CA, O=SpotiPuk")
         val subject = X500Name("CN=$domain")
         val serial = BigInteger.valueOf(System.currentTimeMillis())
         val notBefore = Date()
@@ -755,7 +755,7 @@ object LocalProxyManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = context.contentResolver
             val values = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, "Spotilol_CA.pem")
+                put(MediaStore.Downloads.DISPLAY_NAME, "SpotiPuk_CA.pem")
                 put(MediaStore.Downloads.MIME_TYPE, "application/x-pem-file")
                 put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 put(MediaStore.Downloads.IS_PENDING, 1)
@@ -770,12 +770,12 @@ object LocalProxyManager {
                 }
                 resolver.update(uri, clearPending, null, null)
                 Log.d(TAG, "CA exported to Downloads via MediaStore")
-                return "/sdcard/Download/Spotilol_CA.pem"
+                return "/sdcard/Download/SpotiPuk_CA.pem"
             }
         } else {
             @Suppress("DEPRECATION")
             val file = File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), "Spotilol_CA.pem")
+                Environment.DIRECTORY_DOWNLOADS), "SpotiPuk_CA.pem")
             file.writeText(pem)
             Log.d(TAG, "CA exported to ${file.absolutePath}")
             return file.absolutePath
@@ -790,7 +790,7 @@ object LocalProxyManager {
     fun installCACert(activity: Activity) {
         try {
             val intent = KeyChain.createInstallIntent()
-            intent.putExtra(KeyChain.EXTRA_NAME, "SpotilolMITM")
+            intent.putExtra(KeyChain.EXTRA_NAME, "SpotiPukMITM")
             intent.putExtra(KeyChain.EXTRA_CERTIFICATE, caCert!!.encoded)
             activity.startActivity(intent)
         } catch (e: Exception) {

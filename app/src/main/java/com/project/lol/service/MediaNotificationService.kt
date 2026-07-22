@@ -30,11 +30,14 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.math.min
 
-class MediaNotificationService : Service() {
+import android.support.v4.media.MediaBrowserCompat
+import androidx.media.MediaBrowserServiceCompat
+
+class MediaNotificationService : MediaBrowserServiceCompat() {
 
     companion object {
         private const val TAG = "MediaNotifService"
-        private const val CHANNEL_ID = "spotilol_media_playback"
+        private const val CHANNEL_ID = "spotipuk_media_playback"
         private const val NOTIFICATION_ID = 1
 
         private const val ACTION_PLAY_PAUSE = "com.project.lol.ACTION_PLAY_PAUSE"
@@ -53,7 +56,7 @@ class MediaNotificationService : Service() {
             PlaybackStateCompat.ACTION_STOP or
             PlaybackStateCompat.ACTION_SEEK_TO
 
-        private const val NOTIF_COLOR = 0xFFE0E0E0.toInt()
+        private const val NOTIF_COLOR = 0xFFFF6A00.toInt()
 
         var webView: WebView? = null
         var instance: MediaNotificationService? = null
@@ -86,7 +89,7 @@ class MediaNotificationService : Service() {
     private val audioBecomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                val prefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+                val prefs = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
                 if (prefs.getBoolean("BtAutoPause", false)) pausePlayback()
             }
         }
@@ -94,7 +97,7 @@ class MediaNotificationService : Service() {
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val prefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+            val prefs = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
             when (intent.action) {
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     if (prefs.getBoolean("BtAutoPause", false)) pausePlayback()
@@ -111,6 +114,7 @@ class MediaNotificationService : Service() {
         instance = this
         createNotificationChannel()
         setupMediaSession()
+        sessionToken = mediaSession.sessionToken
         registerReceivers()
         registerDisconnectReceivers()
         try {
@@ -120,6 +124,21 @@ class MediaNotificationService : Service() {
             stopSelf()
             return
         }
+    }
+
+    override fun onGetRoot(
+        clientPackageName: String,
+        clientUid: Int,
+        rootHints: Bundle?
+    ): BrowserRoot {
+        return BrowserRoot("root", null)
+    }
+
+    override fun onLoadChildren(
+        parentId: String,
+        result: Result<MutableList<MediaBrowserCompat.MediaItem>>
+    ) {
+        result.sendResult(mutableListOf())
     }
 
     @Suppress("DEPRECATION")
@@ -136,7 +155,7 @@ class MediaNotificationService : Service() {
         return START_STICKY
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder? = super.onBind(intent)
 
     override fun onDestroy() {
         releaseWakeLock()
@@ -155,7 +174,7 @@ class MediaNotificationService : Service() {
                 "Media Playback",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Spotilol media playback controls"
+                description = "SpotiPuk media playback controls"
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
@@ -166,7 +185,7 @@ class MediaNotificationService : Service() {
 
     @Suppress("DEPRECATION")
     private fun setupMediaSession() {
-        mediaSession = MediaSessionCompat(this, "SpotilolSession").apply {
+        mediaSession = MediaSessionCompat(this, "SpotiPukSession").apply {
             setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
@@ -314,7 +333,7 @@ class MediaNotificationService : Service() {
         val builder = MediaMetadataCompat.Builder()
             .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentTitle)
             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentArtist)
-            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Spotilol")
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "SpotiPuk")
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentDuration)
         coverBitmap?.let { bmp ->
             builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bmp)
@@ -383,9 +402,9 @@ class MediaNotificationService : Service() {
         ).build()
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(currentTitle.ifEmpty { "Spotilol" })
+            .setContentTitle(currentTitle.ifEmpty { "SpotiPuk" })
             .setContentText(currentArtist)
-            .setSubText("Spotilol")
+            .setSubText("SpotiPuk")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(contentIntent)
             .setOngoing(true)

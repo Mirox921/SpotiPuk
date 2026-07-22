@@ -19,7 +19,7 @@ class SpotifyBridge(activityRef: WeakReference<Activity>) {
     @JavascriptInterface
     fun loginDetected() {
         val activity = activityRef.get() ?: return
-        activity.getSharedPreferences("spotilol_prefs", Activity.MODE_PRIVATE)
+        activity.getSharedPreferences("spotipuk_prefs", Activity.MODE_PRIVATE)
             .edit()
             .putBoolean("LoggedIn", true)
             .apply()

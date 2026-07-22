@@ -1,14 +1,14 @@
 [versions]
-agp = "9.2.1"
-kotlin = "2.4.0"
-coreKtx = "1.19.0"
-appcompat = "1.7.1"
-material = "1.14.0"
-webkit = "1.13.0"
-composeBom = "2026.06.01"
-activityCompose = "1.10.0"
-lifecycleRuntime = "2.9.0"
-media = "1.7.1"
+agp = "8.7.3"
+kotlin = "2.0.21"
+coreKtx = "1.15.0"
+appcompat = "1.7.0"
+material = "1.12.0"
+webkit = "1.12.1"
+composeBom = "2024.10.01"
+activityCompose = "1.9.3"
+lifecycleRuntime = "2.8.7"
+media = "1.7.0"
 securityCrypto = "1.0.0"
 bouncycastle = "1.70"
 
@@ -36,5 +36,6 @@ lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-ru
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

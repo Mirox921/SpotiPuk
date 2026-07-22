@@ -28,7 +28,7 @@ class SpotifyWebViewClient(
             onPageFinishedClean(view, CLASSIC_LOGIN_BUTTON)
         }
 
-        val loggedIn = view.context.getSharedPreferences("spotilol_prefs", 0)
+        val loggedIn = view.context.getSharedPreferences("spotipuk_prefs", 0)
             .getBoolean("LoggedIn", false)
 
         if (!loggedIn) {
@@ -40,7 +40,7 @@ class SpotifyWebViewClient(
 
         view.evaluateJavascript(LOGOUT_CHECK_JS) { result ->
             if (result == "\"out\"") {
-                view.context.getSharedPreferences("spotilol_prefs", 0)
+                view.context.getSharedPreferences("spotipuk_prefs", 0)
                     .edit().putBoolean("LoggedIn", false).apply()
                 view.loadUrl("https://accounts.spotify.com/login")
             }
@@ -86,7 +86,7 @@ class SpotifyWebViewClient(
     }
 
     private fun injectPlayerControl(view: WebView) {
-        val prefs = view.context.getSharedPreferences("spotilol_prefs", 0)
+        val prefs = view.context.getSharedPreferences("spotipuk_prefs", 0)
         val autoPlayMode = prefs.getString("APlayMode", "disabled") ?: "disabled"
         val closeNowPlay = prefs.getBoolean("CloseNowPlay", true)
         val amoledEnabled = prefs.getBoolean("AmoledTheme", false)
@@ -377,6 +377,27 @@ class SpotifyWebViewClient(
         """
 
         private const val PLAYBACK_CONTROLS = """
+            window.isSpotPlaying = function(pb) {
+                if (!pb) pb = window.pBtn || document.querySelector('button[data-testid=control-button-playpause]');
+                if (!pb) return !!window.playing;
+                var label = (pb.getAttribute('aria-label') || '').toLowerCase();
+                if (label) {
+                    if (/pause|пауза|приостановить|pausa|поозо|стоп/i.test(label)) return true;
+                    if (/play|воспроизвести|играть|reproducir|lire|spielen|spela|spil|покрени/i.test(label)) return false;
+                }
+                var paths = pb.querySelectorAll('svg path');
+                if (paths.length > 1) return true;
+                if (paths.length === 1) {
+                    var d = paths[0].getAttribute('d') || '';
+                    var m = d.match(/[Mm]/g);
+                    if (m && m.length >= 2) return true;
+                    return false;
+                }
+                return !!window.playing;
+            };
+            window.isSpotPaused = function(pb) {
+                return !window.isSpotPlaying(pb);
+            };
             window.playFromUri = function(uri) {
                 var type = uri.match(/^spotify:([^:]+)/);
                 type = type ? type[1] : 'your_library';
@@ -395,14 +416,15 @@ class SpotifyWebViewClient(
                 });
             };
             window.actPlayPause = function(play) {
-                var pb = window.pBtn;
+                var pb = window.pBtn || document.querySelector('button[data-testid=control-button-playpause]');
                 if (!pb) return;
+                var currPlaying = window.isSpotPlaying(pb);
                 if (play === null || typeof play === 'undefined') {
                     pb.click();
                 } else if (play === true) {
-                    if (!window.playing) pb.click();
+                    if (!currPlaying) pb.click();
                 } else if (play === false) {
-                    if (window.playing) pb.click();
+                    if (currPlaying) pb.click();
                 }
             };
             window.actSkipBack = function() {
@@ -491,21 +513,23 @@ class SpotifyWebViewClient(
                         window.pBtn = pb;
 
                         pBtn.addEventListener('click', function(){
-                            if(pBtn.getAttribute('aria-label')!=='Play') {
-                                reqPause=true;
-                                ulFlag=false;
-                                AndBridge.wakeOff();
-                            } else if(!ulFlag) {
-                                reqPause=false;
-                                AndBridge.wakeUp();
-                                ulFlag=true;
-                                setTimeout(function(){
-                                    if(ulFlag && pBtn.getAttribute('aria-label')==='Play') {
-                                        AndBridge.deferMessage('unlock');
-                                        actSkipForward();
-                                    } else if(ulFlag) { ulFlag=false; }
-                                },10000);
-                            }
+                            setTimeout(function(){
+                                if(window.isSpotPlaying(pBtn)) {
+                                    reqPause=false;
+                                    AndBridge.wakeUp();
+                                    ulFlag=true;
+                                    setTimeout(function(){
+                                        if(ulFlag && window.isSpotPaused(pBtn)) {
+                                            AndBridge.deferMessage('unlock');
+                                            actSkipForward();
+                                        } else if(ulFlag) { ulFlag=false; }
+                                    },10000);
+                                } else {
+                                    reqPause=true;
+                                    ulFlag=false;
+                                    AndBridge.wakeOff();
+                                }
+                            }, 50);
                         });
 
                         if(!ffDone){
@@ -515,7 +539,7 @@ class SpotifyWebViewClient(
                             addAutoFeatures();
                             addCSSJSHack();
                             addAndAuto();
-                            setTimeout(function(){ if(window.autoPlayMode!=='disabled' && playing) actPlayPause(true); },10000);
+                            setTimeout(function(){ if(window.autoPlayMode!=='disabled' && window.playing) actPlayPause(true); },10000);
                         }
                     }
                 },5000);
@@ -525,7 +549,7 @@ class SpotifyWebViewClient(
 
         private const val AUTO_FEATURES = """
             window.addAutoFeatures = function(){
-                if('pBtn' in window && firstPlay && window.autoPlayMode!=='disabled' && pBtn.getAttribute('aria-label')==='Play') {
+                if('pBtn' in window && firstPlay && window.autoPlayMode!=='disabled' && window.isSpotPaused(pBtn)) {
                     pBtn.click();
                     firstPlay=false;
                 }
@@ -540,7 +564,7 @@ class SpotifyWebViewClient(
                             if(cb) cb.click();
                         },500);
                     }
-                    if(window.autoPlayMode==='permanent' && 'pBtn' in window && !reqPause && !ulFlag && pBtn.getAttribute('aria-label')==='Play') {
+                    if(window.autoPlayMode==='permanent' && 'pBtn' in window && !reqPause && !ulFlag && window.isSpotPaused(pBtn)) {
                         pBtn.click();
                     }
                 },5000);
@@ -561,7 +585,7 @@ class SpotifyWebViewClient(
                     var fb = document.querySelector('div[data-testid=now-playing-widget]>div:last-child>button');
                     if(fb && fb.getAttribute('aria-checked')==='true') isfav=true; else isfav=false;
                     var pb = document.querySelector('button[data-testid=control-button-playpause]');
-                    if(pb) playing=pb.getAttribute('aria-label')!=='Play';
+                    if(pb) playing=window.isSpotPlaying(pb);
                     var rg = document.querySelector('div[data-testid=playback-progressbar] input[type=range]');
                     if(rg) { duration=parseInt(rg.getAttribute('max')); position=parseInt(rg.getAttribute('value')); }
                     else { duration=null; position=null; }
@@ -636,19 +660,19 @@ class SpotifyWebViewClient(
                 },5000);
             };
             var st=document.createElement('style');
-            st.textContent='body{min-width:100%!important;min-height:100%!important} .os-scrollbar{--os-size:6px!important} .contentSpacing{padding:0} div[data-testid=root]{--panel-gap:0!important} #main-view+div,#main-view+div>div{overflow:hidden!important;width:auto} #main-view+div>div>div>div:nth-child(2)>div{width:100vw!important} div[data-encore-id=banner],#global-nav-bar>div:first-of-type,#global-nav-bar a[href="/download"],button[data-testid=fullscreen-mode-button],button[data-testid=friend-activity-button],div.main-view-container__mh-footer-container,li:has(>a[href*="spotify.com/premium"]),li:has(>a[href*="support.spotify.com"]),li:has(>a[href*="spotify.com/download"]){display:none!important} aside[data-testid="now-playing-bar"]{display:none!important} #spotilolPlayerControls{position:fixed;bottom:12px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;padding:12px 14px 14px;background:rgba(24,24,24,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.6)} #spotilolPlayerControls .spl-top{display:flex;align-items:center;gap:10px;margin-bottom:8px} #spotilolPlayerControls .spl-cover{flex-shrink:0} #spotilolPlayerControls .spl-cover img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#282828} #spotilolPlayerControls .spl-info{flex:1;min-width:0;overflow:hidden} #spotilolPlayerControls .spl-track{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotilolPlayerControls .spl-track:hover{color:#1db954} #spotilolPlayerControls .spl-artist{font-size:12px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotilolPlayerControls .spl-artist:hover{color:#1db954} #spotilolPlayerControls .spl-row2{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px} #spotilolPlayerControls .spl-actions-left{display:flex;align-items:center;gap:2px} #spotilolPlayerControls .spl-liked-btn{color:rgba(255,255,255,.7)!important;position:relative} #spotilolPlayerControls .spl-liked-btn.spl-active{color:#1db954!important} #spotilolPlayerControls .spl-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s} #spotilolPlayerControls .spl-btn:hover{color:#fff;background:rgba(255,255,255,.1)} #spotilolPlayerControls .spl-btn-sm{padding:6px} #spotilolPlayerControls .spl-active{color:#1db954} #spotilolPlayerControls .spl-bottom{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px} #spotilolPlayerControls .spl-time{font-size:10px;color:rgba(255,255,255,.45);min-width:30px;text-align:center;font-variant-numeric:tabular-nums} #spotilolPlayerControls .spl-bar-wrap{flex:1;position:relative;height:14px;display:flex;align-items:center} #spotilolPlayerControls .spl-bar{width:100%;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative} #spotilolPlayerControls .spl-fill{height:100%;background:#1db954;border-radius:2px;transition:width .4s linear;width:0%;position:relative} #spotilolPlayerControls .spl-handle{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);left:0%;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.5)} #spotilolPlayerControls .spl-bar-wrap:hover .spl-handle{opacity:1} #spotilolPlayerControls .spl-transport{display:flex;align-items:center;justify-content:center;gap:16px;padding:2px 0} #spotilolPlayerControls .spl-play{background:rgba(255,255,255,.1)!important;color:#fff!important;padding:10px!important} #spotilolPlayerControls .spl-play:hover{background:rgba(255,255,255,.2)!important} @media(max-width:420px){#spotilolPlayerControls{bottom:8px;left:8px;right:8px;padding:8px 10px 10px;border-radius:14px} #spotilolPlayerControls .spl-cover img{width:42px;height:42px;border-radius:8px} #spotilolPlayerControls .spl-track{font-size:13px} #spotilolPlayerControls .spl-artist{font-size:11px} #spotilolPlayerControls .spl-actions-left{gap:0} #spotilolPlayerControls .spl-btn-sm{padding:5px} #spotilolPlayerControls .spl-transport{gap:12px} #spotilolPlayerControls .spl-play{padding:8px!important}} section[data-testid=artist-page]>div>div:first-child:not([data-encore-id]){height:25vh} div[data-testid=tracklist-row]{padding:0 10px 0 0;grid-gap:0} div[data-testid=tracklist-row] button:not([data-testid=add-to-playlist-button]){transform:scale(1.3)!important;opacity:0.6!important} div[data-testid=tracklist-row] button:{-webkit-margin-end:0!important} div[data-testid=tracklist-row] button:hover{color:#2d6!important} div[data-testid=tracklist-row]>div:first-child>div:first-child{height:24px;min-height:24px;min-width:24px;margin:0 8px!important} [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [last] minmax(82px,var(--col2,1fr))!important} [aria-colcount="4"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [var1] minmax(120px,var(--col2,2fr)) [last] minmax(82px,var(--col3,1fr))!important} [aria-colcount="5"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,6fr)) [var1] minmax(120px,var(--col2,4fr)) [var2] minmax(120px,var(--col3,3fr)) [last] minmax(82px,var(--col4,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="2"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [last] minmax(82px,var(--col1,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [var1] minmax(120px,var(--col1,2fr)) [last] minmax(82px,var(--col2,1fr))!important} .npbtn{cursor:pointer;color:#b3b3b3;background:transparent;border:none;width:32px;height:32px;padding:8px} .npbtn.active{color:#FFFFFF} *{--content-spacing:10px} section[data-testid=home-page] .contentSpacing{padding:0 10px!important;overflow:hidden} [data-shelf-collapsable="true"]{display:none!important} div[data-testid=grid-container]{margin-inline:0!important;column-gap:0!important;overflow:hidden!important} div[data-testid=action-bar-row],div[data-testid=topbar-content]{padding:5px 10px} div[data-testid=track-list]>div:first-child,div[data-testid=playlist-tracklist]>div:first-child{margin:0!important;padding:0!important} main>section:not([data-testid=artist-page])>div:first-child{height:auto!important;min-height:auto!important;padding:10px} section[data-testid=track-page]>div>div.contentSpacing>div:last-child{overflow:hidden} section[data-testid=artist-page]>div>div:first-child>div.contentSpacing{padding:10px} section[data-testid=artist-page] div[data-testid=grid-container] h2,section[data-testid=artist-page] section[data-testid=component-shelf]{padding:0 10px} main>section h1.encore-text-headline-large{font-size:22px!important} section[data-testid=artist-page] span.encore-text-headline-large{font-size:26px!important} section[data-testid=track-page] h1{font-size:20px!important} aside[data-testid=now-playing-bar]{min-width:100%!important;box-shadow:none!important;background:#000000!important} aside[data-testid=now-playing-bar]>div:first-child{margin-top:2px;flex-direction:column!important;height:auto!important} aside[data-testid=now-playing-bar]>div>div{width:100%!important} aside[data-testid=now-playing-bar]>div>div:last-child>div{min-height:32px;margin:5px 10px} aside[data-testid=now-playing-bar]>div>div:last-child button{transform:scale(1.15);margin:0 5px} div[data-testid=general-controls]{margin:15px 0 25px} div[data-testid=general-controls] button{transform:scale(1.4)!important;margin:0 8px!important} div[data-testid=player-controls]{margin:5px 0} div[data-testid=now-playing-widget]{justify-content:center;overflow:hidden} form[role=search]{z-index:10;margin-left:48px;max-width:88%} div[data-testid=now-playing-widget]>div:last-child>button{transform:scale(1.3)} div[data-testid=now-playing-widget]>div:first-child{display:none!important} div[data-testid=now-playing-widget]>div:nth-child(2){display:flex!important;overflow:hidden!important} div[data-testid=now-playing-widget]>div:nth-child(2) span{font-size:13px!important;height:20px!important;margin:0!important} div[data-testid=now-playing-widget]>div:nth-child(2)>div{min-width:auto;max-width:66%} [data-tippy-root]{overflow:hidden!important} [data-tippy-root],[data-tippy-root] *{transition:none!important;transform:none!important} div[data-testid=hover-or-focus-tooltip],#Desktop_LeftSidebar_Id header>div>div:last-child{display:none!important} #Desktop_LeftSidebar_Id>nav>div{min-height:48px;border-radius:25px} .YourLibraryX{overflow:hidden;background:var(--background-elevated-base)!important} .YourLibraryX header{padding:14px} #spotilolPlayerControls .spl-disabled{opacity:.3!important;pointer-events:none}';
+            st.textContent='body{min-width:100%!important;min-height:100%!important} .os-scrollbar{--os-size:6px!important} .contentSpacing{padding:0} div[data-testid=root]{--panel-gap:0!important} #main-view+div,#main-view+div>div{overflow:hidden!important;width:auto} #main-view+div>div>div>div:nth-child(2)>div{width:100vw!important} div[data-encore-id=banner],#global-nav-bar>div:first-of-type,#global-nav-bar a[href="/download"],button[data-testid=fullscreen-mode-button],button[data-testid=friend-activity-button],div.main-view-container__mh-footer-container,li:has(>a[href*="spotify.com/premium"]),li:has(>a[href*="support.spotify.com"]),li:has(>a[href*="spotify.com/download"]){display:none!important} aside[data-testid="now-playing-bar"]{display:none!important} #spotipukPlayerControls{position:fixed;bottom:12px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;padding:12px 14px 14px;background:rgba(24,24,24,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.6)} #spotipukPlayerControls .spl-top{display:flex;align-items:center;gap:10px;margin-bottom:8px} #spotipukPlayerControls .spl-cover{flex-shrink:0} #spotipukPlayerControls .spl-cover img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#282828} #spotipukPlayerControls .spl-info{flex:1;min-width:0;overflow:hidden} #spotipukPlayerControls .spl-track{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-track:hover{color:#ff6a00} #spotipukPlayerControls .spl-artist{font-size:12px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-artist:hover{color:#ff6a00} #spotipukPlayerControls .spl-row2{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px} #spotipukPlayerControls .spl-actions-left{display:flex;align-items:center;gap:2px} #spotipukPlayerControls .spl-liked-btn{color:rgba(255,255,255,.7)!important;position:relative} #spotipukPlayerControls .spl-liked-btn.spl-active{color:#ff6a00!important} #spotipukPlayerControls .spl-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s} #spotipukPlayerControls .spl-btn:hover{color:#fff;background:rgba(255,255,255,.1)} #spotipukPlayerControls .spl-btn-sm{padding:6px} #spotipukPlayerControls .spl-active{color:#ff6a00} #spotipukPlayerControls .spl-bottom{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px} #spotipukPlayerControls .spl-time{font-size:10px;color:rgba(255,255,255,.45);min-width:30px;text-align:center;font-variant-numeric:tabular-nums} #spotipukPlayerControls .spl-bar-wrap{flex:1;position:relative;height:14px;display:flex;align-items:center} #spotipukPlayerControls .spl-bar{width:100%;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative} #spotipukPlayerControls .spl-fill{height:100%;background:#ff6a00;border-radius:2px;transition:width .4s linear;width:0%;position:relative} #spotipukPlayerControls .spl-handle{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);left:0%;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.5)} #spotipukPlayerControls .spl-bar-wrap:hover .spl-handle{opacity:1} #spotipukPlayerControls .spl-transport{display:flex;align-items:center;justify-content:center;gap:16px;padding:2px 0} #spotipukPlayerControls .spl-play{background:rgba(255,255,255,.1)!important;color:#fff!important;padding:10px!important} #spotipukPlayerControls .spl-play:hover{background:rgba(255,255,255,.2)!important} @media(max-width:420px){#spotipukPlayerControls{bottom:8px;left:8px;right:8px;padding:8px 10px 10px;border-radius:14px} #spotipukPlayerControls .spl-cover img{width:42px;height:42px;border-radius:8px} #spotipukPlayerControls .spl-track{font-size:13px} #spotipukPlayerControls .spl-artist{font-size:11px} #spotipukPlayerControls .spl-actions-left{gap:0} #spotipukPlayerControls .spl-btn-sm{padding:5px} #spotipukPlayerControls .spl-transport{gap:12px} #spotipukPlayerControls .spl-play{padding:8px!important}} section[data-testid=artist-page]>div>div:first-child:not([data-encore-id]){height:25vh} div[data-testid=tracklist-row]{padding:0 10px 0 0;grid-gap:0} div[data-testid=tracklist-row] button:not([data-testid=add-to-playlist-button]){transform:scale(1.3)!important;opacity:0.6!important} div[data-testid=tracklist-row] button:{-webkit-margin-end:0!important} div[data-testid=tracklist-row] button:hover{color:#ff6a00!important} div[data-testid=tracklist-row]>div:first-child>div:first-child{height:24px;min-height:24px;min-width:24px;margin:0 8px!important} [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [last] minmax(82px,var(--col2,1fr))!important} [aria-colcount="4"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [var1] minmax(120px,var(--col2,2fr)) [last] minmax(82px,var(--col3,1fr))!important} [aria-colcount="5"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,6fr)) [var1] minmax(120px,var(--col2,4fr)) [var2] minmax(120px,var(--col3,3fr)) [last] minmax(82px,var(--col4,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="2"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [last] minmax(82px,var(--col1,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [var1] minmax(120px,var(--col1,2fr)) [last] minmax(82px,var(--col2,1fr))!important} .npbtn{cursor:pointer;color:#b3b3b3;background:transparent;border:none;width:32px;height:32px;padding:8px} .npbtn.active{color:#FFFFFF} *{--content-spacing:10px} section[data-testid=home-page] .contentSpacing{padding:0 10px!important;overflow:hidden} [data-shelf-collapsable="true"]{display:none!important} div[data-testid=grid-container]{margin-inline:0!important;column-gap:0!important;overflow:hidden!important} div[data-testid=action-bar-row],div[data-testid=topbar-content]{padding:5px 10px} div[data-testid=track-list]>div:first-child,div[data-testid=playlist-tracklist]>div:first-child{margin:0!important;padding:0!important} main>section:not([data-testid=artist-page])>div:first-child{height:auto!important;min-height:auto!important;padding:10px} section[data-testid=track-page]>div>div.contentSpacing>div:last-child{overflow:hidden} section[data-testid=artist-page]>div>div:first-child>div.contentSpacing{padding:10px} section[data-testid=artist-page] div[data-testid=grid-container] h2,section[data-testid=artist-page] section[data-testid=component-shelf]{padding:0 10px} main>section h1.encore-text-headline-large{font-size:22px!important} section[data-testid=artist-page] span.encore-text-headline-large{font-size:26px!important} section[data-testid=track-page] h1{font-size:20px!important} aside[data-testid=now-playing-bar]{min-width:100%!important;box-shadow:none!important;background:#000000!important} aside[data-testid=now-playing-bar]>div:first-child{margin-top:2px;flex-direction:column!important;height:auto!important} aside[data-testid=now-playing-bar]>div>div{width:100%!important} aside[data-testid=now-playing-bar]>div>div:last-child>div{min-height:32px;margin:5px 10px} aside[data-testid=now-playing-bar]>div>div:last-child button{transform:scale(1.15);margin:0 5px} div[data-testid=general-controls]{margin:15px 0 25px} div[data-testid=general-controls] button{transform:scale(1.4)!important;margin:0 8px!important} div[data-testid=player-controls]{margin:5px 0} div[data-testid=now-playing-widget]{justify-content:center;overflow:hidden} form[role=search]{z-index:10;margin-left:48px;max-width:88%} div[data-testid=now-playing-widget]>div:last-child>button{transform:scale(1.3)} div[data-testid=now-playing-widget]>div:first-child{display:none!important} div[data-testid=now-playing-widget]>div:nth-child(2){display:flex!important;overflow:hidden!important} div[data-testid=now-playing-widget]>div:nth-child(2) span{font-size:13px!important;height:20px!important;margin:0!important} div[data-testid=now-playing-widget]>div:nth-child(2)>div{min-width:auto;max-width:66%} [data-tippy-root]{overflow:hidden!important} [data-tippy-root],[data-tippy-root] *{transition:none!important;transform:none!important} div[data-testid=hover-or-focus-tooltip],#Desktop_LeftSidebar_Id header>div>div:last-child{display:none!important} #Desktop_LeftSidebar_Id>nav>div{min-height:48px;border-radius:25px} .YourLibraryX{overflow:hidden;background:var(--background-elevated-base)!important} .YourLibraryX header{padding:14px} #spotipukPlayerControls .spl-disabled{opacity:.3!important;pointer-events:none}';
             try{var target=document.head||document.documentElement;if(target)target.appendChild(st);else{document.addEventListener('DOMContentLoaded',function(){var t=document.head||document.documentElement;if(t)t.appendChild(st);});}}catch(e){}
         """
 
         private const val CUSTOM_PLAYER = """
-            window.initSpotilolPlayer=function(){
-                if(document.getElementById('spotilolPlayerControls')) return;
+            window.initSpotipukPlayer=function(){
+                if(document.getElementById('spotipukPlayerControls')) return;
                 var npb=document.querySelector('aside[data-testid="now-playing-bar"]');
                 if(!npb) return;
                 npb.style.display='none';
 
                 var pl=document.createElement('div');
-                pl.id='spotilolPlayerControls';
+                pl.id='spotipukPlayerControls';
                 pl.innerHTML=''
                     +'<div class="spl-top">'
                     +'<div class="spl-cover"><img id="spl-cover-img" src="" alt=""></div>'
@@ -682,7 +706,7 @@ class SpotifyWebViewClient(
 
                 document.getElementById('spl-prev').onclick=function(){actSkipBack()};
                 document.getElementById('spl-next').onclick=function(){actSkipForward()};
-                document.getElementById('spl-play').onclick=function(){var pb=document.querySelector('button[data-testid=control-button-playpause]');actPlayPause(pb&&pb.getAttribute('aria-label')==='Play')};
+                document.getElementById('spl-play').onclick=function(){actPlayPause()};
                 document.getElementById('spl-shuffle').onclick=function(){var sb=document.querySelector('button[data-testid=control-button-shuffle]');if(sb)sb.click()};
                 document.getElementById('spl-repeat').onclick=function(){actRepeat()};
                 document.getElementById('spl-lyrics').onclick=function(){if(this.classList.contains('spl-disabled'))return;if(typeof closeNowPlay==='function') closeNowPlay();var lb=document.querySelector('button[data-testid=lyrics-button]');if(lb&&!lb.disabled)lb.click()};
@@ -747,7 +771,7 @@ class SpotifyWebViewClient(
                     var rg=document.querySelector('[data-testid="playback-progressbar"] input[type=range]');
                     if(pp){
                         var pb=document.querySelector('button[data-testid=control-button-playpause]');
-                        var isPlaying=pb&&pb.getAttribute('aria-label')!=='Play';
+                        var isPlaying=window.isSpotPlaying(pb);
                         pp.innerHTML=isPlaying
                             ?'<svg viewBox="0 0 16 16" width="22" height="22"><path fill="currentColor" d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7z"/></svg>'
                             :'<svg viewBox="0 0 16 16" width="22" height="22"><path fill="currentColor" d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288z"/></svg>';
@@ -796,19 +820,19 @@ class SpotifyWebViewClient(
 
                 setInterval(splUpdate,500);
             };
-            if(document.readyState==='complete') initSpotilolPlayer();
-            else window.addEventListener('load',initSpotilolPlayer);
+            if(document.readyState==='complete') initSpotipukPlayer();
+            else window.addEventListener('load',initSpotipukPlayer);
             setInterval(function(){
                 var npb=document.querySelector('aside[data-testid="now-playing-bar"]');
-                if(npb&&npb.style.display!=='none') initSpotilolPlayer();
+                if(npb&&npb.style.display!=='none') initSpotipukPlayer();
             },3000);
         """
         fun buildAmoledJs(enabled: Boolean): String {
             return if (enabled) {
                 """
                     (function(){
-                        var aled = document.getElementById('spotilol-amoled-theme') || document.createElement('style');
-                        aled.id = 'spotilol-amoled-theme';
+                        var aled = document.getElementById('spotipuk-amoled-theme') || document.createElement('style');
+                        aled.id = 'spotipuk-amoled-theme';
                         aled.textContent = '.encore-dark-theme{--background-base:#000;--background-highlight:#000;--background-elevated-base:#000;--background-elevated-highlight:#000;--background-elevated-press:#000;--background-tinted-base:#000} aside[data-testid=now-playing-bar]{background:#000!important;box-shadow:none;border-top:1px solid #666}';
                         if (!aled.parentNode) (document.head || document.documentElement).appendChild(aled);
                     })();
@@ -816,7 +840,7 @@ class SpotifyWebViewClient(
             } else {
                 """
                     (function(){
-                        var aled = document.getElementById('spotilol-amoled-theme');
+                        var aled = document.getElementById('spotipuk-amoled-theme');
                         if (aled) aled.remove();
                     })();
                 """.trimIndent()
@@ -852,14 +876,14 @@ class SpotifyWebViewClient(
             val jsonCss = JSONObject.quote(css)
             return """
                 (function(){
-                    var cst = document.getElementById('spotilol-custom-css');
+                    var cst = document.getElementById('spotipuk-custom-css');
                     if ($jsonCss === "") {
                         if (cst) cst.remove();
                         return;
                     }
                     if (!cst) {
                         cst = document.createElement('style');
-                        cst.id = 'spotilol-custom-css';
+                        cst.id = 'spotipuk-custom-css';
                     }
                     cst.textContent = $jsonCss;
                     var target = document.head || document.documentElement;

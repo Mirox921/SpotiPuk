@@ -83,6 +83,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.project.lol.R
 import com.project.lol.ui.theme.SpotifyTheme
 import androidx.compose.ui.text.font.FontFamily
@@ -103,7 +104,7 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        prefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+        prefs = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
 
         setContent {
             var materialYou by remember { mutableStateOf(prefs.getBoolean("MaterialYou", false)) }
@@ -184,7 +185,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = stringResource(R.string.settings_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -193,7 +194,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -216,17 +217,17 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             SettingSectionCard(
-                title = "PLAYER",
+                title = stringResource(R.string.section_player),
                 icon = Icons.Default.PlayCircle
             ) {
                 val autoplayLabel = when (autoplayMode) {
-                    "disabled" -> "Disabled"
-                    "onetime" -> "One time at start"
-                    "permanent" -> "Permanent"
-                    else -> "One time at start"
+                    "disabled" -> stringResource(R.string.autoplay_disabled)
+                    "onetime" -> stringResource(R.string.autoplay_onetime)
+                    "permanent" -> stringResource(R.string.autoplay_permanent)
+                    else -> stringResource(R.string.autoplay_onetime)
                 }
                 SettingTile(
-                    title = "AutoPlay Mode",
+                    title = stringResource(R.string.autoplay_mode_title),
                     subtitle = autoplayLabel,
                     icon = Icons.Default.PlayCircle,
                     onClick = { showAutoPlayDialog = true }
@@ -235,8 +236,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "Take Player Control",
-                    subtitle = "Auto-accept 'Take Control' prompt",
+                    title = stringResource(R.string.take_control_title),
+                    subtitle = stringResource(R.string.take_control_subtitle),
                     icon = Icons.Default.TouchApp,
                     checked = takeControl,
                     onCheckedChange = {
@@ -248,8 +249,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "Android Auto Controls",
-                    subtitle = "Media metadata for notifications",
+                    title = stringResource(R.string.android_auto_title),
+                    subtitle = stringResource(R.string.android_auto_subtitle),
                     icon = Icons.Default.DirectionsCar,
                     checked = andAuto,
                     onCheckedChange = {
@@ -261,8 +262,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "Always Close Now Playing",
-                    subtitle = "Auto-close the Now Playing panel",
+                    title = stringResource(R.string.close_now_playing_title),
+                    subtitle = stringResource(R.string.close_now_playing_subtitle),
                     icon = Icons.Default.CloseFullscreen,
                     checked = closeNowPlay,
                     onCheckedChange = {
@@ -273,12 +274,12 @@ fun SettingsScreen(
             }
 
             SettingSectionCard(
-                title = "BLUETOOTH",
+                title = stringResource(R.string.section_bluetooth),
                 icon = Icons.Default.Smartphone
             ) {
                 SettingSwitchTile(
-                    title = "Pause on Disconnect",
-                    subtitle = "Pause when BT/headphones disconnect",
+                    title = stringResource(R.string.bt_pause_title),
+                    subtitle = stringResource(R.string.bt_pause_subtitle),
                     icon = Icons.Default.Smartphone,
                     checked = btAutoPause,
                     onCheckedChange = {
@@ -290,8 +291,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "Resume on Connect",
-                    subtitle = "Resume when BT device connects",
+                    title = stringResource(R.string.bt_resume_title),
+                    subtitle = stringResource(R.string.bt_resume_subtitle),
                     icon = Icons.Default.Smartphone,
                     checked = btAutoResume,
                     onCheckedChange = {
@@ -302,17 +303,17 @@ fun SettingsScreen(
             }
 
             SettingSectionCard(
-                title = "APPEARANCE",
+                title = stringResource(R.string.section_appearance),
                 icon = Icons.Default.Palette
             ) {
                 val guiLabel = when (guiMode) {
-                    "csshack" -> "Mobile CSS + JS"
-                    "bigwindow" -> "Wide Window"
-                    "none" -> "None"
-                    else -> "Mobile CSS + JS"
+                    "csshack" -> stringResource(R.string.gui_mode_csshack)
+                    "bigwindow" -> stringResource(R.string.gui_mode_bigwindow)
+                    "none" -> stringResource(R.string.gui_mode_none)
+                    else -> stringResource(R.string.gui_mode_csshack)
                 }
                 SettingTile(
-                    title = "GUI Hack Mode",
+                    title = stringResource(R.string.gui_mode_title),
                     subtitle = guiLabel,
                     icon = Icons.Default.Palette,
                     onClick = { showGuiModeDialog = true }
@@ -321,8 +322,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingTile(
-                    title = "Custom CSS",
-                    subtitle = if (customCss.isBlank()) "None configured" else customCss,
+                    title = stringResource(R.string.custom_css_title),
+                    subtitle = if (customCss.isBlank()) stringResource(R.string.custom_css_none) else customCss,
                     icon = Icons.Default.Code,
                     onClick = { showCustomCssDialog = true }
                 )
@@ -330,8 +331,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "Material You Theme",
-                    subtitle = "Use Android system dynamic colors",
+                    title = stringResource(R.string.material_you_title),
+                    subtitle = stringResource(R.string.material_you_subtitle),
                     icon = Icons.Default.ColorLens,
                     checked = materialYou,
                     onCheckedChange = { enabled ->
@@ -343,8 +344,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingSwitchTile(
-                    title = "AMOLED Theme",
-                    subtitle = "Pure black background (saves battery)",
+                    title = stringResource(R.string.amoled_theme_title),
+                    subtitle = stringResource(R.string.amoled_theme_subtitle),
                     icon = Icons.Default.DarkMode,
                     checked = amoledTheme,
                     onCheckedChange = { enabled ->
@@ -356,13 +357,13 @@ fun SettingsScreen(
             }
 
             SettingSectionCard(
-                title = "SECURITY & NETWORK",
+                title = stringResource(R.string.section_security),
                 icon = Icons.Default.Shield
             ) {
                 val context = LocalContext.current
                 SettingTile(
-                    title = "CA Certificate",
-                    subtitle = "Re-export proxy certificate to Downloads",
+                    title = stringResource(R.string.ca_cert_title),
+                    subtitle = stringResource(R.string.ca_cert_subtitle),
                     icon = Icons.Default.Shield,
                     onClick = {
                         val path = LocalProxyManager.exportCACert(context)
@@ -372,12 +373,12 @@ fun SettingsScreen(
             }
 
             SettingSectionCard(
-                title = "SYSTEM",
+                title = stringResource(R.string.section_system),
                 icon = Icons.Default.PowerSettingsNew
             ) {
                 SettingSwitchTile(
-                    title = "Swipe to Stop Service",
-                    subtitle = "Kill background service from recents",
+                    title = stringResource(R.string.swipe_stop_title),
+                    subtitle = stringResource(R.string.swipe_stop_subtitle),
                     icon = Icons.Default.PowerSettingsNew,
                     checked = swipeStop,
                     onCheckedChange = {
@@ -389,8 +390,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingTile(
-                    title = "Empty Cache",
-                    subtitle = "Useful if player navigation is slow",
+                    title = stringResource(R.string.empty_cache_title),
+                    subtitle = stringResource(R.string.empty_cache_subtitle),
                     icon = Icons.Default.CleaningServices,
                     onClick = { showClearCacheDialog = true }
                 )
@@ -398,8 +399,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingTile(
-                    title = "Empty Cache & Login Data",
-                    subtitle = "Clear everything and log out",
+                    title = stringResource(R.string.empty_cache_data_title),
+                    subtitle = stringResource(R.string.empty_cache_data_subtitle),
                     icon = Icons.Default.DeleteForever,
                     onClick = { showClearDataDialog = true },
                     isDestructive = true
@@ -410,12 +411,12 @@ fun SettingsScreen(
             val uc = remember { UpdateChecker(updateContext) }
             var hasUpdate by remember { mutableStateOf(uc.hasUpdateAvailable()) }
             SettingSectionCard(
-                title = "UPDATES",
+                title = stringResource(R.string.section_updates),
                 icon = Icons.Default.SystemUpdate
             ) {
                 SettingTile(
-                    title = "Check for Updates",
-                    subtitle = "Manually check for new releases",
+                    title = stringResource(R.string.check_updates_title),
+                    subtitle = stringResource(R.string.check_updates_subtitle),
                     icon = Icons.Default.SystemUpdate,
                     showBadge = hasUpdate,
                     onClick = {
@@ -435,15 +436,15 @@ fun SettingsScreen(
             val appVersionName = packageInfo?.versionName ?: "1.0.0"
 
             SettingSectionCard(
-                title = "ABOUT",
+                title = stringResource(R.string.section_about),
                 icon = Icons.Default.Info
             ) {
                 SettingTile(
-                    title = "GitHub Repository",
-                    subtitle = "github.com/lyssadev/Spotilol",
+                    title = stringResource(R.string.github_title),
+                    subtitle = "github.com/lyssadev/SpotiPuk",
                     painter = painterResource(id = R.drawable.ic_github),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/lyssadev/Spotilol"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/lyssadev/SpotiPuk"))
                         context.startActivity(intent)
                     }
                 )
@@ -451,7 +452,7 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingTile(
-                    title = "Spotilol Version",
+                    title = stringResource(R.string.app_version_title),
                     subtitle = "v$appVersionName",
                     icon = Icons.Default.Smartphone,
                     onClick = {}
@@ -460,8 +461,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
                 SettingTile(
-                    title = "WebView Engine",
-                    subtitle = pkg?.versionName ?: "System WebView",
+                    title = stringResource(R.string.webview_engine_title),
+                    subtitle = pkg?.versionName ?: stringResource(R.string.system_webview),
                     icon = Icons.Default.Language,
                     onClick = {}
                 )
@@ -470,7 +471,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "Developed by lyssadev & reversed Spotifuck app by Deviato.",
+                text = stringResource(R.string.about_footer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.fillMaxWidth(),
@@ -483,11 +484,11 @@ fun SettingsScreen(
 
     if (showAutoPlayDialog) {
         SingleChoiceDialog(
-            title = "AutoPlay Mode",
+            title = stringResource(R.string.autoplay_mode_title),
             options = listOf(
-                "disabled" to "Disabled",
-                "onetime" to "One time at start",
-                "permanent" to "Permanent"
+                "disabled" to stringResource(R.string.autoplay_disabled),
+                "onetime" to stringResource(R.string.autoplay_onetime),
+                "permanent" to stringResource(R.string.autoplay_permanent)
             ),
             selected = autoplayMode,
             onSelect = { value ->
@@ -500,11 +501,11 @@ fun SettingsScreen(
 
     if (showGuiModeDialog) {
         SingleChoiceDialog(
-            title = "GUI Hack Mode",
+            title = stringResource(R.string.gui_mode_title),
             options = listOf(
-                "csshack" to "Mobile CSS + JS",
-                "bigwindow" to "Wide Window",
-                "none" to "None"
+                "csshack" to stringResource(R.string.gui_mode_csshack),
+                "bigwindow" to stringResource(R.string.gui_mode_bigwindow),
+                "none" to stringResource(R.string.gui_mode_none)
             ),
             selected = guiMode,
             onSelect = { value ->
@@ -529,9 +530,9 @@ fun SettingsScreen(
 
     if (showClearCacheDialog) {
         ConfirmationDialog(
-            title = "Empty Cache",
-            message = "This will clear the WebView cache. Continue?",
-            confirmText = "Clear Cache",
+            title = stringResource(R.string.empty_cache_title),
+            message = stringResource(R.string.clear_cache_dialog_msg),
+            confirmText = stringResource(R.string.clear_cache_dialog_confirm),
             onConfirm = {
                 showClearCacheDialog = false
                 onClearCache()
@@ -542,9 +543,9 @@ fun SettingsScreen(
 
     if (showClearDataDialog) {
         ConfirmationDialog(
-            title = "Empty Cache & Login Data",
-            message = "All cookies and login data will be deleted. On restart you will need to log in again. Continue?",
-            confirmText = "Clear All Data",
+            title = stringResource(R.string.empty_cache_data_title),
+            message = stringResource(R.string.clear_data_dialog_msg),
+            confirmText = stringResource(R.string.clear_data_dialog_confirm),
             isDestructive = true,
             onConfirm = {
                 showClearDataDialog = false
@@ -801,7 +802,7 @@ fun SingleChoiceDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.primary)
             }
         }
     )
@@ -826,7 +827,7 @@ fun CustomCssDialog(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "Custom CSS",
+                    text = stringResource(R.string.custom_css_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -834,12 +835,6 @@ fun CustomCssDialog(
         },
         text = {
             Column {
-                Text(
-                    text = "Injected custom CSS rules into Spotify webview",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
                 OutlinedTextField(
                     value = tempCss,
                     onValueChange = { tempCss = it },
@@ -848,7 +843,7 @@ fun CustomCssDialog(
                         .height(180.dp),
                     placeholder = {
                         Text(
-                            "/* Write your CSS overrides here (use !important if needed) */\naside[data-testid=now-playing-bar] { display: none !important; }",
+                            stringResource(R.string.custom_css_hint),
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
                         )
                     },
@@ -868,12 +863,12 @@ fun CustomCssDialog(
             TextButton(
                 onClick = { onSave(tempCss) }
             ) {
-                Text("Save", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.dialog_save), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -916,7 +911,7 @@ fun ConfirmationDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )

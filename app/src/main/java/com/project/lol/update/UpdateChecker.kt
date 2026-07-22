@@ -10,8 +10,8 @@ import java.net.URL
 class UpdateChecker(private val context: Context) {
 
     companion object {
-        private const val API_URL = "https://api.github.com/repos/lyssadev/Spotilol/releases/latest"
-        private const val PREFS_NAME = "spotilol_prefs"
+        private const val API_URL = "https://api.github.com/repos/lyssadev/SpotiPuk/releases/latest"
+        private const val PREFS_NAME = "spotipuk_prefs"
         private const val KEY_HAS_UPDATE = "hasUpdateAvailable"
         private const val KEY_LAST_CHECK = "LastUpdateCheck"
         private const val CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000L

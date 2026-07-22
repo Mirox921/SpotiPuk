@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,7 +47,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val MonochromeAccent = Color(0xFFE0E0E0)
+private val MonochromeAccent = Color(0xFFFF6A00)
 private val MonochromeText = Color(0xFFFFFFFF)
 
 class CertificateActivity : ComponentActivity() {
@@ -92,7 +93,7 @@ class CertificateActivity : ComponentActivity() {
                             CircularProgressIndicator(color = MonochromeAccent)
                             Spacer(Modifier.height(16.dp))
                             Text(
-                                "Checking certificate...",
+                                stringResource(com.project.lol.R.string.checking_certificate),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -152,7 +153,7 @@ fun CACertDialog(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Certificate Required",
+            text = stringResource(com.project.lol.R.string.certificate_required),
             style = MaterialTheme.typography.headlineSmall,
             color = MonochromeAccent,
             fontWeight = FontWeight.Bold
@@ -161,7 +162,7 @@ fun CACertDialog(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Spotilol uses a local certificate to bypass Spotify's WebView restrictions. Install it once to continue.",
+            text = stringResource(com.project.lol.R.string.cert_explanation),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
             textAlign = TextAlign.Center
@@ -175,15 +176,15 @@ fun CACertDialog(
             color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Step(1, "Tap \"Export .pem\" below to save the certificate to Downloads")
+                Step(1, stringResource(com.project.lol.R.string.cert_step1))
                 Spacer(Modifier.height(12.dp))
-                Step(2, "Go to Settings > Security > Encryption & credentials > Install a certificate > CA certificate")
+                Step(2, stringResource(com.project.lol.R.string.cert_step2))
                 Spacer(Modifier.height(12.dp))
-                Step(3, "Select the file Spotilol_CA.pem from your Downloads folder")
+                Step(3, stringResource(com.project.lol.R.string.cert_step3))
                 Spacer(Modifier.height(12.dp))
-                Step(4, "When prompted, choose \"Install anyway\"")
+                Step(4, stringResource(com.project.lol.R.string.cert_step4))
                 Spacer(Modifier.height(12.dp))
-                Step(5, "Come back here and tap \"Check\" below")
+                Step(5, stringResource(com.project.lol.R.string.cert_step5))
             }
         }
 
@@ -197,14 +198,14 @@ fun CACertDialog(
                 onClick = onExport,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Export .pem", color = MonochromeAccent)
+                Text(stringResource(com.project.lol.R.string.export_pem), color = MonochromeAccent)
             }
 
             TextButton(
                 onClick = onCheck,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Check", color = Color(0xFF1DB954))
+                Text(stringResource(com.project.lol.R.string.check_btn), color = Color(0xFFFF6A00))
             }
         }
     }

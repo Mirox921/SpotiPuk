@@ -19,6 +19,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -115,12 +119,12 @@ class MainActivity : ComponentActivity() {
     ) { _ -> }
 
     private val sleepTimerOptions = listOf(
-        0 to "Off",
-        5 to "5 min",
-        10 to "10 min",
-        15 to "15 min",
-        30 to "30 min",
-        60 to "60 min"
+        0 to R.string.timer_off,
+        5 to R.string.timer_5min,
+        10 to R.string.timer_10min,
+        15 to R.string.timer_15min,
+        30 to R.string.timer_30min,
+        60 to R.string.timer_60min
     )
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -138,7 +142,18 @@ class MainActivity : ComponentActivity() {
         updateAvailable.value = uc.hasUpdateAvailable()
         uc.autoCheck()
 
-        val prefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
+        if (!prefs.contains("LoggedIn")) {
+            val oldPrefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+            if (oldPrefs.contains("LoggedIn")) {
+                prefs.edit()
+                    .putBoolean("LoggedIn", oldPrefs.getBoolean("LoggedIn", false))
+                    .putBoolean("ServiceOn", oldPrefs.getBoolean("ServiceOn", true))
+                    .putBoolean("MaterialYou", oldPrefs.getBoolean("MaterialYou", false))
+                    .putBoolean("AmoledTheme", oldPrefs.getBoolean("AmoledTheme", false))
+                    .apply()
+            }
+        }
         val loggedIn = prefs.getBoolean("LoggedIn", false)
 
         serviceEnabledState.value = prefs.getBoolean("ServiceOn", true)
@@ -154,66 +169,7 @@ class MainActivity : ComponentActivity() {
             val loadProgress = loadingProgress.intValue
 
             SpotifyTheme(useDynamicColor = materialYou, amoled = amoled) {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    "Spotilol",
-                                    fontWeight = FontWeight.Bold
-                                )
-                            },
-                            actions = {
-                                IconButton(onClick = {
-                                    startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
-                                }) {
-                                    Box {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_settings),
-                                            contentDescription = "Settings",
-                                            tint = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        if (updateAvailable.value) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(8.dp)
-                                                    .align(Alignment.TopEnd)
-                                                    .background(Color.Red, CircleShape)
-                                            )
-                                        }
-                                    }
-                                }
-                                Spacer(Modifier.width(4.dp))
-                                Switch(
-                                    checked = serviceEnabled,
-                                    onCheckedChange = { newValue ->
-                                        serviceEnabledState.value = newValue
-                                        prefs.edit()
-                                            .putBoolean("ServiceOn", newValue)
-                                            .apply()
-                                        if (!newValue) {
-                                            stopService(Intent(this@MainActivity, MediaNotificationService::class.java))
-                                            serviceStarted = false
-                                            destroyWebView()
-                                        }
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
-                                )
-                                Spacer(Modifier.width(8.dp))
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                                actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                    }
-                ) { innerPadding ->
+                Scaffold { innerPadding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -329,9 +285,52 @@ class MainActivity : ComponentActivity() {
                                         .height(2.dp)
                                         .align(Alignment.TopCenter)
                                         .alpha(progressAlpha),
-                                    color = Color(0xFF22DD66),
+                                    color = Color(0xFFFF6A00),
                                     trackColor = Color.Transparent,
                                 )
+                            }
+
+                            // Centered Settings Button in Orange & Black
+                            Box(
+                                modifier = Modifier
+                                    .statusBarsPadding()
+                                    .padding(top = 8.dp)
+                                    .align(Alignment.TopCenter)
+                                    .offset(x = 40.dp, y = (-45).dp)
+                                    .background(
+                                        color = Color(0xEC121212),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .border(
+                                        width = 1.5.dp,
+                                        color = Color(0xFFFF6A00),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                                    },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_settings),
+                                            contentDescription = "Settings",
+                                            tint = Color.Unspecified,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                        if (updateAvailable.value) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .align(Alignment.TopEnd)
+                                                    .background(Color.Red, CircleShape)
+                                            )
+                                        }
+                                    }
+                                }
                             }
 
                             if (showDialog) {
@@ -429,7 +428,7 @@ class MainActivity : ComponentActivity() {
             val remainingSecs = timerRemainingMs / 1000
             val mins = remainingSecs / 60
             val secs = remainingSecs % 60
-            val timeStr = String.format("%d:%02d min remaining", mins, secs)
+            val timeStr = stringResource(R.string.timer_remaining, mins, secs)
 
             AlertDialog(
                 onDismissRequest = onDismiss,
@@ -439,7 +438,7 @@ class MainActivity : ComponentActivity() {
                 textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = {
                     Text(
-                        "Sleep Timer",
+                        stringResource(R.string.sleep_timer_title),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
@@ -456,7 +455,7 @@ class MainActivity : ComponentActivity() {
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Timer active",
+                            text = stringResource(R.string.timer_active),
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
@@ -472,7 +471,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(onClick = onDismiss) {
-                            Text("Close")
+                            Text(stringResource(R.string.dialog_close))
                         }
                         Spacer(Modifier.width(12.dp))
                         Button(
@@ -481,7 +480,7 @@ class MainActivity : ComponentActivity() {
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Cancel Timer")
+                            Text(stringResource(R.string.cancel_timer))
                         }
                     }
                 },
@@ -496,7 +495,7 @@ class MainActivity : ComponentActivity() {
                 textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = {
                     Text(
-                        "Sleep Timer",
+                        stringResource(R.string.sleep_timer_title),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
@@ -504,7 +503,7 @@ class MainActivity : ComponentActivity() {
                 },
                 text = {
                     Column(Modifier.selectableGroup()) {
-                        sleepTimerOptions.forEach { (minutes, label) ->
+                        sleepTimerOptions.forEach { (minutes, resId) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -526,7 +525,7 @@ class MainActivity : ComponentActivity() {
                                 )
                                 Spacer(Modifier.width(12.dp))
                                 Text(
-                                    text = label,
+                                    text = stringResource(resId),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                             }
@@ -539,7 +538,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(onClick = onDismiss) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.dialog_cancel))
                         }
                         Spacer(Modifier.width(12.dp))
                         Button(
@@ -547,7 +546,7 @@ class MainActivity : ComponentActivity() {
                             enabled = selectedMinutes > 0
                         ) {
                             Text(
-                                if (selectedMinutes > 0) "Set Timer" else "Off"
+                                if (selectedMinutes > 0) stringResource(R.string.set_timer) else stringResource(R.string.timer_off)
                             )
                         }
                     }
@@ -614,7 +613,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val prefs = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
         serviceEnabledState.value = prefs.getBoolean("ServiceOn", true)
         materialYouState.value = prefs.getBoolean("MaterialYou", false)
         amoledState.value = prefs.getBoolean("AmoledTheme", false)
@@ -643,7 +642,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val loggedIn = getSharedPreferences("spotilol_prefs", MODE_PRIVATE)
+        val loggedIn = getSharedPreferences("spotipuk_prefs", MODE_PRIVATE)
             .getBoolean("LoggedIn", false)
         if (!loggedIn) {
             webView?.loadUrl("https://accounts.spotify.com/login")

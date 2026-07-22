@@ -1,116 +1,103 @@
 <p align="center">
-  <img src="art/spotilolicon.png" alt="Spotilol Logo" width="128" height="128">
+  <img src="art/spotilolicon.png" alt="SpotiPuk Logo" width="128" height="128">
 </p>
 
-<h1 align="center">Spotilol</h1>
+<h1 align="center">SpotiPuk</h1>
 
 <p align="center">
-  <a href="https://github.com/lyssadev/Spotilol/stargazers">
-    <img src="https://img.shields.io/github/stars/lyssadev/Spotilol?style=for-the-badge&logo=starship&labelColor=0d0d0d&color=1DB954" alt="stars"/>
-  </a>
-  &nbsp;
-  <a href="https://github.com/lyssadev/Spotilol/releases">
-    <img src="https://img.shields.io/github/downloads/lyssadev/Spotilol/total?style=for-the-badge&logo=download&labelColor=0d0d0d&color=1DB954" alt="downloads"/>
-  </a>
-  &nbsp;
-  <a href="https://github.com/lyssadev/Spotilol/releases/latest">
-    <img src="https://img.shields.io/github/v/release/lyssadev/Spotilol?style=for-the-badge&logo=github&labelColor=0d0d0d&color=1DB954" alt="version"/>
-  </a>
-  &nbsp;
-  <a href="https://github.com/lyssadev/Spotilol/forks">
-    <img src="https://img.shields.io/github/forks/lyssadev/Spotilol?style=for-the-badge&logo=git&labelColor=0d0d0d&color=1DB954" alt="forks"/>
-  </a>
-  &nbsp;
-  <a href="https://github.com/lyssadev/Spotilol/commits/main">
-    <img src="https://img.shields.io/github/last-commit/lyssadev/Spotilol?style=for-the-badge&logo=git&labelColor=0d0d0d&color=1DB954" alt="last commit"/>
-  </a>
+  <strong>A lightweight, fully featured Android companion for Spotify's Web Player with integrated ad-blocking capabilities.</strong>
 </p>
 
 <p align="center">
-  a lil Android app that wraps Spotify's web player with built-in adblocking.
+  <a href="https://github.com/Mirox921/SpotiPuk/stargazers">
+    <img src="https://img.shields.io/github/stars/Mirox921/SpotiPuk?style=for-the-badge&logo=starship&labelColor=121212&color=1DB954" alt="stars"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/Mirox921/SpotiPuk/releases">
+    <img src="https://img.shields.io/github/downloads/Mirox921/SpotiPuk/total?style=for-the-badge&logo=download&labelColor=121212&color=1DB954" alt="downloads"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/Mirox921/SpotiPuk/releases/latest">
+    <img src="https://img.shields.io/github/v/release/Mirox921/SpotiPuk?style=for-the-badge&logo=github&labelColor=121212&color=1DB954" alt="version"/>
+  </a>
 </p>
-
-it's a fork of [Spotifuck](https://github.com/deviato/Spotifuck) by **deviato**, ported from smali to clean Kotlin. all free, all open-source.
-
-runs a local MITM proxy with a custom CA cert so Spotify doesn't clock you're on a WebView. that's the magic trick. everything else passes through untouched.
 
 ---
 
-## Preview
+## ⚡ Overview
+
+**SpotiPuk** is an open-source Android wrapper for the Spotify web player, built entirely in Kotlin and Jetpack Compose. By routing traffic through a lightweight local MITM proxy using a custom CA certificate, SpotiPuk achieves complete, seamless audio ad-blocking and native media integration directly on your device.
+
+This project is a modern, clean Kotlin rewrite and continuation of **Spotifuck** by **deviato**, porting the core logic from Smali bytecode into modern Android code.
+
+---
+
+## 📸 Screenshots
 
 <div align="center">
-  <img src="art/spotilol_ss1.webp" alt="screenshot 1" width="30%" style="max-width: 250px; margin: 4px; border-radius: 12px;" />
-  <img src="art/spotilol_ss2.webp" alt="screenshot 2" width="30%" style="max-width: 250px; margin: 4px; border-radius: 12px;" />
-  <img src="art/spotilol_ss3.webp" alt="screenshot 3" width="30%" style="max-width: 250px; margin: 4px; border-radius: 12px;" />
+  <img src="art/Screenshot_2026_07_22_15_23_53_73_ab3a63e24d4ef3d7aa6c5d6e8c585a73.webp" alt="SpotiPuk Player Screen" width="30%" style="max-width: 250px; margin: 6px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
+  <img src="art/-2147483648_-210125.webp" alt="SpotiPuk Settings Screen" width="30%" style="max-width: 250px; margin: 6px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
+  <img src="art/Screenshot_2026_07_22_15_24_17_52_ab3a63e24d4ef3d7aa6c5d6e8c585a73.webp" alt="SpotiPuk Extra Screen" width="30%" style="max-width: 250px; margin: 6px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
 </div>
 
 ---
 
-## Download
+## 🌟 Core Features
 
-grab the latest APK from the [releases page](https://github.com/lyssadev/spotilol/releases/latest).
-
-download the `.apk` file and install it on your device. you may need to toggle **"Install from unknown sources"** in your Settings.
-
----
-
-## Features
-
-- blocks audio ads 🚫
-- media notification with play/pause, skip, seek, like/unlike
-- works with lock screen, Bluetooth, Wear OS
-- autoplay modes: off, once at start, or permanent
-- mobile-friendly CSS/JS layout tweaks
-- AMOLED dark mode (pure black)
-- keeps screen on while you're vibing
-- browse your library through Spotify's API
-- update checker (auto & manual)
+- **🛡️ Integrated Ad-Blocker** — Built-in local proxy blocks audio ads, banners, and analytics tracking scripts natively.
+- **🎵 System Media Controls** — Complete integration with Android MediaSession (playback state, play/pause, next/previous tracks, seek bar, and liking tracks).
+- **🔒 Lockscreen & Background Play** — Play your favorite tracks with your screen turned off or while using other apps.
+- **✨ Autoplay Management** — Three configurable autoplay behaviors (Disabled, Play once on startup, or Permanent auto-play).
+- **📱 Responsive Mobile Layout** — Beautiful custom CSS injects and layout tweaks designed to optimize Spotify's web player for any mobile screen.
+- **🖤 True Dark Mode** — Full AMOLED dark styling support to save battery life.
+- **🔄 Smart Updates** — Automatic checks and manual options to ensure you are always running the latest version.
 
 ---
 
-## Requirements
+## 🚀 Installation & First Launch
 
-- Android 8.0+ (API 26)
-- a Spotify account (free or premium)
-- Google Chrome / WebView (comes with your phone)
+SpotiPuk uses a locally generated CA certificate to sign secure connections to Spotify web services, preventing Chrome/WebView from blocking local traffic.
 
----
-
-## Quick Start: The Certificate Thing
-
-Spotilol generates a local CA cert so Spotify doesn't know you're in a WebView. it lives on your device, stays on your device.
-
-1. open Spotilol — you'll see the **"Certificate Required"** screen
-2. tap **"Export .pem"** to save it to your Downloads
-3. go to **Settings > Security > Encryption & Credentials > Install a certificate > CA certificate**
-4. find `spotilol_ca.pem` in your Downloads and tap it
-5. it'll warn you about network monitoring — tap **"Install anyway"**
-6. come back to Spotilol and tap **"Check"**. if it worked, you're in.
-
-> **Note:** if you ever clear your device's credential storage (like after a factory reset), you'll have to do this again.
+1. **Download & Install**: Get the latest `.apk` from the [Releases page](https://github.com/Mirox921/SpotiPuk/releases/latest).
+2. **Launch the App**: Open SpotiPuk. You will be greeted by the **Certificate Required** guide.
+3. **Export Certificate**: Tap **"Export .pem"** to save the unique CA certificate file onto your device's Downloads folder.
+4. **Install Certificate**:
+   - Go to your device's system **Settings** ➡️ **Security** ➡️ **More Security Settings** / **Encryption & Credentials**.
+   - Select **Install a certificate** ➡️ **CA certificate**.
+   - Tap **Install anyway** on the security warning.
+   - Select the exported `spotipuk_ca.pem` file.
+5. **Start Jamming**: Return to SpotiPuk and tap **"Check"**. Once verified, you're all set!
 
 ---
 
-## Build It Yourself
+## 🛠️ Build Requirements
+
+- **Android Studio Jellyfish+** or command line tools.
+- **Android SDK** (API level 28+).
+- **Gradle 8.0+** with Java 17.
+
+To build the APK manually:
 
 ```bash
-git clone https://github.com/lyssadev/Spotilol
-cd Spotilol
+# Clone the repository
+git clone https://github.com/Mirox921/SpotiPuk
+
+# Navigate into project directory
+cd SpotiPuk
+
+# Build debug build
 ./gradlew assembleDebug
 ```
 
-APK lands at `app/build/outputs/apk/debug/app-debug.apk`.
+The resulting package will be stored at:  
+`app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## Contributing
+## 🤝 Contributing & License
 
-contributions are welcome. open issues, throw PRs, suggest stuff — free for all.
+Contributions are always welcome! Feel free to open issues, submit pull requests, or propose new layout adjustments. 
 
----
+**SpotiPuk** is free and open-source software. Special thanks to **deviato** for reverse-engineering work on Spotifuck.
 
-## Credits
-
-Spotilol exists because deviato did the reverse-engineering work on Spotifuck. this ports the core logic from smali to Kotlin with extra features and maintenance.
-
-**Open-sourced by lyssadev <3 deviato**
+Developed and maintained with ❤️ by **Mirox921** &amp; **deviato**.

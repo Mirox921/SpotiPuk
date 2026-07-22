@@ -1,14 +1,14 @@
--keepclassmembers class com.project.lol.bridge.SpotifyBridge {
+-keepclassmembers class com.project.puk.bridge.SpotifyBridge {
     @android.webkit.JavascriptInterface <methods>;
 }
--keep class com.project.lol.bridge.SpotifyBridge { *; }
--keep class com.project.lol.webview.SpotifyWebViewClient { *; }
--keep class com.project.lol.webview.SpotifyWebChromeClient { *; }
--keep class com.project.lol.service.MediaNotificationService { *; }
--keep class com.project.lol.proxy.LocalProxyManager { *; }
--keep class com.project.lol.ui.MainActivity { *; }
--keep class com.project.lol.ui.SettingsActivity { *; }
--keep class com.project.lol.ui.CertificateActivity { *; }
+-keep class com.project.puk.bridge.SpotifyBridge { *; }
+-keep class com.project.puk.webview.SpotifyWebViewClient { *; }
+-keep class com.project.puk.webview.SpotifyWebChromeClient { *; }
+-keep class com.project.puk.service.MediaNotificationService { *; }
+-keep class com.project.puk.proxy.LocalProxyManager { *; }
+-keep class com.project.puk.ui.MainActivity { *; }
+-keep class com.project.puk.ui.SettingsActivity { *; }
+-keep class com.project.puk.ui.CertificateActivity { *; }
 -keep class org.bouncycastle.** { *; }
 -dontwarn org.bouncycastle.**
 -dontwarn javax.annotation.concurrent.GuardedBy

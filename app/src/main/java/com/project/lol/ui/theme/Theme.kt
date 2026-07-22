@@ -18,21 +18,21 @@ fun SpotifyTheme(
             androidx.compose.material3.dynamicDarkColorScheme(context)
         }
         else -> androidx.compose.material3.darkColorScheme(
-            primary = Color(0xFFE0E0E0),
-            onPrimary = Color(0xFF121212),
-            primaryContainer = Color(0xFF2E2E2E),
-            onPrimaryContainer = Color(0xFFF5F5F5),
-            inversePrimary = Color(0xFF121212),
-            secondary = Color(0xFFCCCCCC),
-            onSecondary = Color(0xFF1A1A1A),
-            secondaryContainer = Color(0xFF262626),
-            onSecondaryContainer = Color(0xFFE0E0E0),
-            tertiary = Color(0xFFB0B0B0),
+            primary = Color(0xFFFF6A00),
+            onPrimary = Color(0xFF000000),
+            primaryContainer = Color(0xFF331500),
+            onPrimaryContainer = Color(0xFFFFDBC8),
+            inversePrimary = Color(0xFF000000),
+            secondary = Color(0xFFFF8A36),
+            onSecondary = Color(0xFF000000),
+            secondaryContainer = Color(0xFF2A1508),
+            onSecondaryContainer = Color(0xFFFFCCB3),
+            tertiary = Color(0xFFFFB380),
             onTertiary = Color(0xFF181818),
             tertiaryContainer = Color(0xFF202020),
             onTertiaryContainer = Color(0xFFD6D6D6),
-            outline = Color(0xFF767676),
-            outlineVariant = Color(0xFF444444)
+            outline = Color(0xFFFF6A00),
+            outlineVariant = Color(0xFF442200)
         )
     }
 

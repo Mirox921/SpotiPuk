@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Spotilol"
+rootProject.name = "SpotiPuk"
 include(":app")

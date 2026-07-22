@@ -1,18 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.project.lol"
-    compileSdk = 37
+    namespace = "com.project.puk"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.project.lol"
+        applicationId = "com.project.puk"
         minSdk = 28
-        targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.5"
+        targetSdk = 35
+        versionCode = 5
+        versionName = "1.1.0"
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
@@ -45,6 +46,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
