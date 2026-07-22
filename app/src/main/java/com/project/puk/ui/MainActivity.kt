@@ -228,6 +228,11 @@ class MainActivity : ComponentActivity() {
                                         setInitialScale(100)
                                         setBackgroundColor(0xFF000000.toInt())
 
+                                        // Не даём системе занижать приоритет процесса-рендерера,
+                                        // даже если Android решит, что можно сэкономить ресурсы —
+                                        // это напрямую влияет на плавность скролла/анимаций.
+                                        setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true)
+
                                         if (WebViewFeature.isFeatureSupported(WebViewFeature.BACK_FORWARD_CACHE)) {
                                             WebSettingsCompat.setBackForwardCacheEnabled(settings, true)
                                         }

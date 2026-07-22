@@ -577,6 +577,11 @@ class SpotifyWebViewClient(
             window.addAndAuto = function(){
                 if(aaint) clearInterval(aaint);
                 aaint = setInterval(function(){
+                    // Не дёргаем DOM, пока приложение свёрнуто/экран выключен —
+                    // это чистая экономия CPU, на функциональность не влияет
+                    // (MediaSession и так интерполирует прогресс между обновлениями).
+                    if(document.visibilityState !== 'visible') return;
+
                     var ta = document.querySelector('a[data-testid=context-item-link]');
                     if(ta) track=ta.text; else track=null;
                     var aa = document.querySelector('a[data-testid=context-item-info-artist]');
@@ -601,7 +606,7 @@ class SpotifyWebViewClient(
                         cover=s;
                     } else cover=null;
                     updMedia();
-                },1000);
+                },1500);
             };
         """
 
