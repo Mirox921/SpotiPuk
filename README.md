@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app\src\main\res\drawable\ic_app_icon_fg.png" alt="SpotiPuk Logo" width="128" height="128">
+  <img src="art/spotilolicon.png" alt="SpotiPuk Logo" width="128" height="128">
 </p>
 
 <h1 align="center">SpotiPuk</h1>

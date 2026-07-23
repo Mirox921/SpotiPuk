@@ -40,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -108,6 +109,7 @@ class MainActivity : ComponentActivity() {
     private val sleepTimerActive = mutableStateOf(false)
 
     private val loadingProgress = mutableIntStateOf(100)
+    private val isWebViewLoading = mutableStateOf(true)
     private val updateAvailable = mutableStateOf(false)
 
     private val notifPermLauncher = registerForActivityResult(
@@ -247,6 +249,12 @@ class MainActivity : ComponentActivity() {
                                         webViewClient = SpotifyWebViewClient(
                                             onLoginRequired = {
                                                 loadUrl("https://accounts.spotify.com/login")
+                                            },
+                                            onLoadStarted = {
+                                                isWebViewLoading.value = true
+                                            },
+                                            onLoadFinished = {
+                                                isWebViewLoading.value = false
                                             }
                                         )
 
@@ -282,6 +290,34 @@ class MainActivity : ComponentActivity() {
                                 progressProvider = { loadingProgress.intValue },
                                 modifier = Modifier.align(Alignment.TopCenter)
                             )
+
+                            // Экран загрузки поверх WebView — закрывает собой "рваное"
+                            // появление интерфейса при холодном старте/выходе из логина.
+                            run {
+                                val overlayAlpha by animateFloatAsState(
+                                    targetValue = if (isWebViewLoading.value) 1f else 0f,
+                                    animationSpec = tween(durationMillis = 350),
+                                    label = "loadingOverlayAlpha"
+                                )
+                                if (overlayAlpha > 0f) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .alpha(overlayAlpha)
+                                            .background(Color(0xFF121212)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = Color(0xFFFF6A00),
+                                                trackColor = Color(0xFF2A2A2A)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
 
                             // Centered Settings Button in Orange & Black
                             Box(

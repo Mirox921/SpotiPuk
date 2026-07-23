@@ -12,7 +12,9 @@ import java.io.ByteArrayInputStream
 import java.util.regex.Pattern
 
 class SpotifyWebViewClient(
-    private val onLoginRequired: () -> Unit
+    private val onLoginRequired: () -> Unit,
+    private val onLoadStarted: () -> Unit = {},
+    private val onLoadFinished: () -> Unit = {}
 ) : WebViewClient() {
 
     override fun onPageFinished(view: WebView?, url: String?) {
@@ -21,6 +23,7 @@ class SpotifyWebViewClient(
 
         if (url.startsWith("https://www.facebook.com/privacy/consent/gdp/")) {
             onPageFinishedClean(view, FB_GDPR_BYPASS)
+            onLoadFinished()
             return
         }
 
@@ -33,10 +36,12 @@ class SpotifyWebViewClient(
 
         if (!loggedIn) {
             onPageFinishedClean(view, LOGIN_DETECTION)
+            onLoadFinished()
             return
         }
 
         injectPlayerControl(view)
+        onLoadFinished()
 
         view.evaluateJavascript(LOGOUT_CHECK_JS) { result ->
             if (result == "\"out\"") {
@@ -49,6 +54,7 @@ class SpotifyWebViewClient(
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
+        onLoadStarted()
         view?.evaluateJavascript(BROWSER_SPOOF, null)
         view?.evaluateJavascript(FETCH_OVERRIDE, null)
     }
@@ -379,6 +385,38 @@ class SpotifyWebViewClient(
         """
 
         private const val PLAYBACK_CONTROLS = """
+            window.findShuffleBtn = function(){
+                return document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-shuffle]')
+                    || document.querySelector('button[data-testid=control-button-shuffle]')
+                    || document.querySelector('button[aria-label*="Shuffle" i]:not(#spotipukPlayerControls *)')
+                    || document.querySelector('button[aria-label*="Перемешать" i]:not(#spotipukPlayerControls *)')
+                    || document.querySelector('button[aria-label*="Aleatorio" i]:not(#spotipukPlayerControls *), button[aria-label*="Aléatoire" i]:not(#spotipukPlayerControls *)');
+            };
+            window.findRepeatBtn = function(){
+                return document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-repeat]')
+                    || document.querySelector('button[data-testid=control-button-repeat]')
+                    || document.querySelector('button[aria-label*="Repeat" i]:not(#spotipukPlayerControls *)')
+                    || document.querySelector('button[aria-label*="Повтор" i]:not(#spotipukPlayerControls *)');
+            };
+            window.simulateFullClick = function(el){
+                if(!el) return;
+                var ownOverlay = document.getElementById('spotipukPlayerControls');
+                if(ownOverlay && ownOverlay.contains(el)){
+                    console.warn('[SpotiPuk] simulateFullClick: попытка кликнуть по своему же элементу заблокирована', el);
+                    return;
+                }
+                var rect = el.getBoundingClientRect();
+                var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+                var opts = {bubbles:true, cancelable:true, view:window, clientX:cx, clientY:cy};
+                try {
+                    ['pointerdown','mousedown','pointerup','mouseup','click'].forEach(function(type){
+                        var Ctor = (type.indexOf('pointer')===0 && window.PointerEvent) ? PointerEvent : MouseEvent;
+                        el.dispatchEvent(new Ctor(type, opts));
+                    });
+                } catch(e) {
+                    el.click();
+                }
+            };
             window.isSpotPlaying = function(pb) {
                 if (!pb) pb = window.pBtn || document.querySelector('button[data-testid=control-button-playpause]');
                 if (!pb) return !!window.playing;
@@ -438,7 +476,7 @@ class SpotifyWebViewClient(
                 if(fb) { AndBridge.wakeUp(); fb.click(); }
             };
             window.actRepeat = function() {
-                var rb = document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-repeat]') || document.querySelector('button[data-testid=control-button-repeat]');
+                var rb = findRepeatBtn();
                 if(rb) {
                     if(repmode=='false') repmode='true';
                     else if(repmode=='true') repmode='mixed';
@@ -496,7 +534,7 @@ class SpotifyWebViewClient(
                             if(anchorBtn === lyBtn) lyBtn.classList.add('fuckd');
                             npBtn = document.createElement('button');
                             npBtn.className = 'npbtn';
-                            npBtn.onclick = clickNP;
+                            npBtn.onclick = function(){ window.userOpenedNP = !window.userOpenedNP; clickNP(); };
                             npBtn.innerHTML = '<svg viewBox="0 0 16 17"><rect x="1" y="0.75" width="14" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M 6 5 L 6 5.9160156 L 9.6933594 8.5 L 6 11.080078 L 6 12 L 11 8.5 L 6 5 z" stroke="currentColor" stroke-width="1.2"/></svg>';
                             window.timerBtn = document.createElement('button');
                             timerBtn.className = 'npbtn';
@@ -587,7 +625,7 @@ class SpotifyWebViewClient(
                     var aa = document.querySelector('a[data-testid=context-item-info-artist]');
                     if(!aa) aa = document.querySelector('a[data-testid=context-item-info-show]');
                     if(aa) artist=aa.text; else artist='';
-                    var rr = document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-repeat]') || document.querySelector('button[data-testid=control-button-repeat]');
+                    var rr = findRepeatBtn();
                     if(rr) repmode=rr.getAttribute('aria-checked'); else repmode='false';
                     var fb = document.querySelector('div[data-testid=now-playing-widget]>div:last-child>button');
                     if(fb && fb.getAttribute('aria-checked')==='true') isfav=true; else isfav=false;
@@ -614,20 +652,24 @@ class SpotifyWebViewClient(
             window.closeNowPlay=function(){
                 if (window.userOpenedNP) return;
                 var rc=document.querySelector('#Desktop_PanelContainer_Id');
-                if(rc&&rc.parentNode.parentNode.ariaHidden=='false'){clickNP();}
+                if(!rc){ return; }
+                if(rc.parentNode && rc.parentNode.parentNode && rc.parentNode.parentNode.ariaHidden=='false'){
+                    window.userOpenedNP = false;
+                    clickNP();
+                }
             };
             window.clickNP=function(){
-                var rBtn=document.querySelector('#Desktop_PanelContainer_Id').parentNode.parentNode.nextElementSibling.querySelector('button');
+                var pc=document.querySelector('#Desktop_PanelContainer_Id');
+                if(!pc || !pc.parentNode || !pc.parentNode.parentNode || !pc.parentNode.parentNode.nextElementSibling){
+                    console.warn('[SpotiPuk] clickNP: #Desktop_PanelContainer_Id не найден или структура DOM изменилась — селектор устарел');
+                    return;
+                }
+                var rBtn=pc.parentNode.parentNode.nextElementSibling.querySelector('button');
                 if(rBtn){
-                    var npHid=document.querySelector('#Desktop_LeftSidebar_Id').parentNode.parentNode.ariaHidden;
-                    if(npHid&&npHid=='true') {
-                        npBtn.classList.add('active');
-                        window.userOpenedNP = true;
-                    } else {
-                        npBtn.classList.remove('active');
-                        window.userOpenedNP = false;
-                    }
-                    rBtn.click();
+                    npBtn.classList.toggle('active', window.userOpenedNP);
+                    simulateFullClick(rBtn);
+                } else {
+                    console.warn('[SpotiPuk] clickNP: кнопка внутри панели не найдена');
                 }
             };
             window.switchLs=function(){
@@ -674,7 +716,7 @@ class SpotifyWebViewClient(
                 },5000);
             };
             var st=document.createElement('style');
-            st.textContent='html,body{scroll-behavior:smooth!important;-webkit-overflow-scrolling:touch!important}body{min-width:100%!important;min-height:100%!important} .os-scrollbar{--os-size:6px!important} .contentSpacing{padding:0} div[data-testid=root]{--panel-gap:0!important} #main-view+div,#main-view+div>div{overflow:hidden!important;width:auto} #main-view+div>div>div>div:nth-child(2)>div{width:100vw!important} div[data-encore-id=banner],#global-nav-bar>div:first-of-type,#global-nav-bar a[href="/download"],button[data-testid=fullscreen-mode-button],button[data-testid=friend-activity-button],div.main-view-container__mh-footer-container,li:has(>a[href*="spotify.com/premium"]),li:has(>a[href*="support.spotify.com"]),li:has(>a[href*="spotify.com/download"]){display:none!important} aside[data-testid="now-playing-bar"]{opacity:0!important;pointer-events:none!important;position:fixed!important;left:-9999px!important;height:0!important;overflow:hidden!important} #spotipukPlayerControls{position:fixed;bottom:12px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;padding:12px 14px 14px;background:rgba(24,24,24,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.6)} #spotipukPlayerControls .spl-top{display:flex;align-items:center;gap:10px;margin-bottom:8px} #spotipukPlayerControls .spl-cover{flex-shrink:0} #spotipukPlayerControls .spl-cover img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#282828} #spotipukPlayerControls .spl-info{flex:1;min-width:0;overflow:hidden} #spotipukPlayerControls .spl-track{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-track:hover{color:#ff6a00} #spotipukPlayerControls .spl-artist{font-size:12px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-artist:hover{color:#ff6a00} #spotipukPlayerControls .spl-row2{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px} #spotipukPlayerControls .spl-actions-left{display:flex;align-items:center;gap:2px} #spotipukPlayerControls .spl-liked-btn{color:rgba(255,255,255,.7)!important;position:relative} #spotipukPlayerControls .spl-liked-btn.spl-active{color:#ff6a00!important} #spotipukPlayerControls .spl-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s} #spotipukPlayerControls .spl-btn:hover{color:#fff;background:rgba(255,255,255,.1)} #spotipukPlayerControls .spl-btn-sm{padding:6px} #spotipukPlayerControls .spl-active{color:#ff6a00} #spotipukPlayerControls .spl-bottom{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px} #spotipukPlayerControls .spl-time{font-size:10px;color:rgba(255,255,255,.45);min-width:30px;text-align:center;font-variant-numeric:tabular-nums} #spotipukPlayerControls .spl-bar-wrap{flex:1;position:relative;height:14px;display:flex;align-items:center} #spotipukPlayerControls .spl-bar{width:100%;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative} #spotipukPlayerControls .spl-fill{height:100%;background:#ff6a00;border-radius:2px;width:0%;position:relative} #spotipukPlayerControls .spl-handle{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);left:0%;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.5)} #spotipukPlayerControls .spl-bar-wrap:hover .spl-handle{opacity:1} #spotipukPlayerControls .spl-transport{display:flex;align-items:center;justify-content:center;gap:16px;padding:2px 0} #spotipukPlayerControls .spl-play{background:rgba(255,255,255,.1)!important;color:#fff!important;padding:10px!important} #spotipukPlayerControls .spl-play:hover{background:rgba(255,255,255,.2)!important} @media(max-width:420px){#spotipukPlayerControls{bottom:8px;left:8px;right:8px;padding:8px 10px 10px;border-radius:14px} #spotipukPlayerControls .spl-cover img{width:42px;height:42px;border-radius:8px} #spotipukPlayerControls .spl-track{font-size:13px} #spotipukPlayerControls .spl-artist{font-size:11px} #spotipukPlayerControls .spl-actions-left{gap:0} #spotipukPlayerControls .spl-btn-sm{padding:5px} #spotipukPlayerControls .spl-transport{gap:12px} #spotipukPlayerControls .spl-play{padding:8px!important}} section[data-testid=artist-page]>div>div:first-child:not([data-encore-id]){height:25vh} div[data-testid=tracklist-row]{padding:0 10px 0 0;grid-gap:0} div[data-testid=tracklist-row] button:not([data-testid=add-to-playlist-button]){transform:scale(1.3)!important;opacity:0.6!important} div[data-testid=tracklist-row] button:{-webkit-margin-end:0!important} div[data-testid=tracklist-row] button:hover{color:#ff6a00!important} div[data-testid=tracklist-row]>div:first-child>div:first-child{height:24px;min-height:24px;min-width:24px;margin:0 8px!important} [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [last] minmax(82px,var(--col2,1fr))!important} [aria-colcount="4"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [var1] minmax(120px,var(--col2,2fr)) [last] minmax(82px,var(--col3,1fr))!important} [aria-colcount="5"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,6fr)) [var1] minmax(120px,var(--col2,4fr)) [var2] minmax(120px,var(--col3,3fr)) [last] minmax(82px,var(--col4,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="2"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [last] minmax(82px,var(--col1,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [var1] minmax(120px,var(--col1,2fr)) [last] minmax(82px,var(--col2,1fr))!important} .npbtn{cursor:pointer;color:#b3b3b3;background:transparent;border:none;width:32px;height:32px;padding:8px} .npbtn.active{color:#FFFFFF} *{--content-spacing:10px} section[data-testid=home-page] .contentSpacing{padding:0 10px!important;overflow:hidden} [data-shelf-collapsable="true"]{display:none!important} div[data-testid=grid-container]{margin-inline:0!important;column-gap:0!important;overflow:hidden!important} div[data-testid=action-bar-row],div[data-testid=topbar-content]{padding:5px 10px} div[data-testid=track-list]>div:first-child,div[data-testid=playlist-tracklist]>div:first-child{margin:0!important;padding:0!important} main>section:not([data-testid=artist-page])>div:first-child{height:auto!important;min-height:auto!important;padding:10px} section[data-testid=track-page]>div>div.contentSpacing>div:last-child{overflow:hidden} section[data-testid=artist-page]>div>div:first-child>div.contentSpacing{padding:10px} section[data-testid=artist-page] div[data-testid=grid-container] h2,section[data-testid=artist-page] section[data-testid=component-shelf]{padding:0 10px} main>section h1.encore-text-headline-large{font-size:22px!important} section[data-testid=artist-page] span.encore-text-headline-large{font-size:26px!important} section[data-testid=track-page] h1{font-size:20px!important} aside[data-testid=now-playing-bar]{min-width:100%!important;box-shadow:none!important;background:#000000!important} aside[data-testid=now-playing-bar]>div:first-child{margin-top:2px;flex-direction:column!important;height:auto!important} aside[data-testid=now-playing-bar]>div>div{width:100%!important} aside[data-testid=now-playing-bar]>div>div:last-child>div{min-height:32px;margin:5px 10px} aside[data-testid=now-playing-bar]>div>div:last-child button{transform:scale(1.15);margin:0 5px} div[data-testid=general-controls]{margin:15px 0 25px} div[data-testid=general-controls] button{transform:scale(1.4)!important;margin:0 8px!important} div[data-testid=player-controls]{margin:5px 0} div[data-testid=now-playing-widget]{justify-content:center;overflow:hidden} form[role=search]{z-index:10;margin-left:48px;max-width:88%} div[data-testid=now-playing-widget]>div:last-child>button{transform:scale(1.3)} div[data-testid=now-playing-widget]>div:first-child{display:none!important} div[data-testid=now-playing-widget]>div:nth-child(2){display:flex!important;overflow:hidden!important} div[data-testid=now-playing-widget]>div:nth-child(2) span{font-size:13px!important;height:20px!important;margin:0!important} div[data-testid=now-playing-widget]>div:nth-child(2)>div{min-width:auto;max-width:66%} [data-tippy-root]{overflow:hidden!important} [data-tippy-root],[data-tippy-root] *{transition:none!important;transform:none!important} div[data-testid=hover-or-focus-tooltip],#Desktop_LeftSidebar_Id header>div>div:last-child{display:none!important} #Desktop_LeftSidebar_Id>nav>div{min-height:48px;border-radius:25px} .YourLibraryX{overflow:hidden;background:var(--background-elevated-base)!important} .YourLibraryX header{padding:14px} #spotipukPlayerControls .spl-disabled{opacity:.3!important;pointer-events:none}';
+            st.textContent='html,body{scroll-behavior:smooth!important;-webkit-overflow-scrolling:touch!important}body{min-width:100%!important;min-height:100%!important} .os-scrollbar{--os-size:6px!important} .contentSpacing{padding:0} div[data-testid=root]{--panel-gap:0!important} #main-view+div,#main-view+div>div{overflow:hidden!important;width:auto} #main-view+div>div>div>div:nth-child(2)>div{width:100vw!important} div[data-encore-id=banner],#global-nav-bar>div:first-of-type,#global-nav-bar a[href="/download"],button[data-testid=fullscreen-mode-button],button[data-testid=friend-activity-button],div.main-view-container__mh-footer-container,li:has(>a[href*="spotify.com/premium"]),li:has(>a[href*="support.spotify.com"]),li:has(>a[href*="spotify.com/download"]){display:none!important} aside[data-testid="now-playing-bar"]{opacity:0!important;pointer-events:none!important;position:fixed!important;left:-9999px!important;height:0!important;overflow:hidden!important} #spotipukPlayerControls{position:fixed;bottom:12px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;padding:12px 14px 14px;background:rgba(24,24,24,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.6)} #spotipukPlayerControls .spl-top{display:flex;align-items:center;gap:10px;margin-bottom:8px} #spotipukPlayerControls .spl-cover{flex-shrink:0} #spotipukPlayerControls .spl-cover img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#282828} #spotipukPlayerControls .spl-info{flex:1;min-width:0;overflow:hidden} #spotipukPlayerControls .spl-track{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-track:hover{color:#ff6a00} #spotipukPlayerControls .spl-artist{font-size:12px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;transition:color .15s;cursor:pointer} #spotipukPlayerControls .spl-artist:hover{color:#ff6a00} #spotipukPlayerControls .spl-row2{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px} #spotipukPlayerControls .spl-actions-left{display:flex;align-items:center;gap:2px} #spotipukPlayerControls .spl-liked-btn{color:rgba(255,255,255,.7)!important;position:relative} #spotipukPlayerControls .spl-liked-btn.spl-active{color:#ff6a00!important} #spotipukPlayerControls .spl-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:11px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;-webkit-tap-highlight-color:transparent;outline:none} #spotipukPlayerControls .spl-btn:focus{outline:none} #spotipukPlayerControls .spl-btn:hover{color:#fff;background:rgba(255,255,255,.1)} #spotipukPlayerControls .spl-btn-sm{padding:9px} #spotipukPlayerControls .spl-active{color:#ff6a00} #spotipukPlayerControls .spl-btn.spl-active{background:rgba(255,106,0,.16)} #spotipukPlayerControls .spl-bottom{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px} #spotipukPlayerControls .spl-time{font-size:10px;color:rgba(255,255,255,.45);min-width:30px;text-align:center;font-variant-numeric:tabular-nums} #spotipukPlayerControls .spl-bar-wrap{flex:1;position:relative;height:14px;display:flex;align-items:center} #spotipukPlayerControls .spl-bar{width:100%;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative} #spotipukPlayerControls .spl-fill{height:100%;background:#ff6a00;border-radius:2px;width:0%;position:relative} #spotipukPlayerControls .spl-handle{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);left:0%;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.5)} #spotipukPlayerControls .spl-bar-wrap:hover .spl-handle{opacity:1} #spotipukPlayerControls .spl-transport{display:flex;align-items:center;justify-content:center;gap:16px;padding:2px 0} #spotipukPlayerControls .spl-play{background:rgba(255,255,255,.1)!important;color:#fff!important;padding:10px!important} #spotipukPlayerControls .spl-play:hover{background:rgba(255,255,255,.2)!important} @media(max-width:420px){#spotipukPlayerControls{bottom:8px;left:8px;right:8px;padding:8px 10px 10px;border-radius:14px} #spotipukPlayerControls .spl-cover img{width:42px;height:42px;border-radius:8px} #spotipukPlayerControls .spl-track{font-size:13px} #spotipukPlayerControls .spl-artist{font-size:11px} #spotipukPlayerControls .spl-actions-left{gap:0} #spotipukPlayerControls .spl-btn-sm{padding:5px} #spotipukPlayerControls .spl-transport{gap:12px} #spotipukPlayerControls .spl-play{padding:8px!important}} section[data-testid=artist-page]>div>div:first-child:not([data-encore-id]){height:25vh} div[data-testid=tracklist-row]{padding:0 10px 0 0;grid-gap:0} div[data-testid=tracklist-row] button:not([data-testid=add-to-playlist-button]){transform:scale(1.3)!important;opacity:0.6!important} div[data-testid=tracklist-row] button:{-webkit-margin-end:0!important} div[data-testid=tracklist-row] button:hover{color:#ff6a00!important} div[data-testid=tracklist-row]>div:first-child>div:first-child{height:24px;min-height:24px;min-width:24px;margin:0 8px!important} [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [last] minmax(82px,var(--col2,1fr))!important} [aria-colcount="4"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,4fr)) [var1] minmax(120px,var(--col2,2fr)) [last] minmax(82px,var(--col3,1fr))!important} [aria-colcount="5"] div[data-testid=tracklist-row]{grid-template-columns:[index] var(--tracklist-index-column-width,40px) [first] minmax(120px,var(--col1,6fr)) [var1] minmax(120px,var(--col2,4fr)) [var2] minmax(120px,var(--col3,3fr)) [last] minmax(82px,var(--col4,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="2"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [last] minmax(82px,var(--col1,1fr))!important} section[data-testid=track-page]>div.contentSpacing>div:nth-child(2) [aria-colcount="3"] div[data-testid=tracklist-row]{grid-template-columns:[first] minmax(120px,var(--col0,4fr)) [var1] minmax(120px,var(--col1,2fr)) [last] minmax(82px,var(--col2,1fr))!important} .npbtn{cursor:pointer;color:#b3b3b3;background:transparent;border:none;width:32px;height:32px;padding:8px} .npbtn.active{color:#FFFFFF} *{--content-spacing:10px} section[data-testid=home-page] .contentSpacing{padding:0 10px!important;overflow:hidden} [data-shelf-collapsable="true"]{display:none!important} div[data-testid=grid-container]{margin-inline:0!important;column-gap:0!important;overflow:hidden!important} div[data-testid=action-bar-row],div[data-testid=topbar-content]{padding:5px 10px} div[data-testid=track-list]>div:first-child,div[data-testid=playlist-tracklist]>div:first-child{margin:0!important;padding:0!important} main>section:not([data-testid=artist-page])>div:first-child{height:auto!important;min-height:auto!important;padding:10px} section[data-testid=track-page]>div>div.contentSpacing>div:last-child{overflow:hidden} section[data-testid=artist-page]>div>div:first-child>div.contentSpacing{padding:10px} section[data-testid=artist-page] div[data-testid=grid-container] h2,section[data-testid=artist-page] section[data-testid=component-shelf]{padding:0 10px} main>section h1.encore-text-headline-large{font-size:22px!important} section[data-testid=artist-page] span.encore-text-headline-large{font-size:26px!important} section[data-testid=track-page] h1{font-size:20px!important} aside[data-testid=now-playing-bar]{min-width:100%!important;box-shadow:none!important;background:#000000!important} aside[data-testid=now-playing-bar]>div:first-child{margin-top:2px;flex-direction:column!important;height:auto!important} aside[data-testid=now-playing-bar]>div>div{width:100%!important} aside[data-testid=now-playing-bar]>div>div:last-child>div{min-height:32px;margin:5px 10px} aside[data-testid=now-playing-bar]>div>div:last-child button{transform:scale(1.15);margin:0 5px} div[data-testid=general-controls]{margin:15px 0 25px} div[data-testid=general-controls] button{transform:scale(1.4)!important;margin:0 8px!important} div[data-testid=player-controls]{margin:5px 0} div[data-testid=now-playing-widget]{justify-content:center;overflow:hidden} form[role=search]{z-index:10;margin-left:48px;max-width:88%} div[data-testid=now-playing-widget]>div:last-child>button{transform:scale(1.3)} div[data-testid=now-playing-widget]>div:first-child{display:none!important} div[data-testid=now-playing-widget]>div:nth-child(2){display:flex!important;overflow:hidden!important} div[data-testid=now-playing-widget]>div:nth-child(2) span{font-size:13px!important;height:20px!important;margin:0!important} div[data-testid=now-playing-widget]>div:nth-child(2)>div{min-width:auto;max-width:66%} [data-tippy-root]{overflow:hidden!important} [data-tippy-root],[data-tippy-root] *{transition:none!important;transform:none!important} div[data-testid=hover-or-focus-tooltip],#Desktop_LeftSidebar_Id header>div>div:last-child{display:none!important} #Desktop_LeftSidebar_Id>nav>div{min-height:48px;border-radius:25px} .YourLibraryX{overflow:hidden;background:var(--background-elevated-base)!important} .YourLibraryX header{padding:14px} #spotipukPlayerControls .spl-disabled{opacity:.3!important;pointer-events:none}';
             try{var target=document.head||document.documentElement;if(target)target.appendChild(st);else{document.addEventListener('DOMContentLoaded',function(){var t=document.head||document.documentElement;if(t)t.appendChild(st);});}}catch(e){}
         """
 
@@ -722,30 +764,44 @@ class SpotifyWebViewClient(
                 document.getElementById('spl-next').onclick=function(){actSkipForward()};
                 document.getElementById('spl-play').onclick=function(){actPlayPause()};
                 document.getElementById('spl-shuffle').onclick=function(){
-                    var sb=document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-shuffle]') || document.querySelector('button[data-testid=control-button-shuffle]');
+                    this.blur();
+                    var sb=findShuffleBtn();
                     if(sb){
                         lastShuffleClick=Date.now();
                         var curr=sb.getAttribute('aria-checked')==='true';
                         this.classList.toggle('spl-active',!curr);
-                        sb.click();
+                        simulateFullClick(sb);
+                    } else {
+                        console.warn('[SpotiPuk] shuffle: control-button-shuffle не найден в DOM — селектор устарел');
                     }
                 };
-                document.getElementById('spl-repeat').onclick=function(){
-                    var rr=document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-repeat]') || document.querySelector('button[data-testid=control-button-repeat]');
-                    if(rr){
-                        lastRepeatClick=Date.now();
-                        var curr=rr.getAttribute('aria-checked')||'false';
-                        if(curr==='false') optRepeatMode='true';
-                        else if(curr==='true') optRepeatMode='mixed';
-                        else optRepeatMode='false';
-                        this.classList.toggle('spl-active',optRepeatMode!=='false');
-                        rr.click();
-                    }
-                };
+            window.REPEAT_ICON_ALL = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75z"/></svg>';
+            window.REPEAT_ICON_ONE = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75z"/><text x="8" y="9.3" font-size="6.5" text-anchor="middle" fill="currentColor" font-family="sans-serif" font-weight="700">1</text></svg>';
+            window.setRepeatIcon = function(mode){
+                var rp=document.getElementById('spl-repeat');
+                if(!rp) return;
+                rp.innerHTML = (mode==='mixed') ? REPEAT_ICON_ONE : REPEAT_ICON_ALL;
+            };
+            document.getElementById('spl-repeat').onclick=function(){
+                this.blur();
+                var rr=findRepeatBtn();
+                if(rr){
+                    lastRepeatClick=Date.now();
+                    var curr=rr.getAttribute('aria-checked')||'false';
+                    if(curr==='false') optRepeatMode='true';
+                    else if(curr==='true') optRepeatMode='mixed';
+                    else optRepeatMode='false';
+                    this.classList.toggle('spl-active',optRepeatMode!=='false');
+                    setRepeatIcon(optRepeatMode);
+                    simulateFullClick(rr);
+                } else {
+                    console.warn('[SpotiPuk] repeat: control-button-repeat не найден в DOM — селектор устарел');
+                }
+            };
                 document.getElementById('spl-lyrics').onclick=function(){if(this.classList.contains('spl-disabled'))return;window.userOpenedNP = true;var lb=document.querySelector('button[data-testid=lyrics-button]');if(lb&&!lb.disabled)lb.click()};
                 document.getElementById('spl-queue').onclick=function(){var qb=document.querySelector('button[data-testid=control-button-queue]');if(qb)qb.click()};
                 document.getElementById('spl-vol').onclick=function(){var vb=document.querySelector('button[data-testid=volume-bar-toggle-mute-button]');if(vb)vb.click()};
-                document.getElementById('spl-nptoggle').onclick=function(){clickNP()};
+                document.getElementById('spl-nptoggle').onclick=function(){ window.userOpenedNP = !window.userOpenedNP; clickNP(); };
                 document.getElementById('spl-timer').onclick=function(){AndBridge.openTimerDialog()};
                 document.getElementById('spl-liked').onclick=function(){actAddToFav()};
 
@@ -787,11 +843,18 @@ class SpotifyWebViewClient(
                     var sh=document.getElementById('spl-shuffle');
                     var rp=document.getElementById('spl-repeat');
                     var lk=document.getElementById('spl-liked');
+                    var vo=document.getElementById('spl-vol');
+                    if(vo){
+                        var vb=document.querySelector('button[data-testid=volume-bar-toggle-mute-button]');
+                        var vLabel=(vb&&vb.getAttribute('aria-label')||'').toLowerCase();
+                        var isMuted=/unmute|включить звук|activer le son|звук вкл/i.test(vLabel);
+                        vo.classList.toggle('spl-active',isMuted===true);
+                    }
                     var ly=document.getElementById('spl-lyrics');
                     var tm=document.getElementById('spl-timer');
 
                     var rc=document.querySelector('#Desktop_PanelContainer_Id');
-                    if(!rc || rc.parentNode.parentNode.ariaHidden=='true'){
+                    if(!rc || !rc.parentNode || !rc.parentNode.parentNode || rc.parentNode.parentNode.ariaHidden=='true'){
                         window.userOpenedNP = false;
                     }
 
@@ -815,12 +878,14 @@ class SpotifyWebViewClient(
                             :'<svg viewBox="0 0 16 16" width="22" height="22"><path fill="currentColor" d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288z"/></svg>';
                     }
                     if(sh && (Date.now() - lastShuffleClick > 2000)){
-                        var sb=document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-shuffle]') || document.querySelector('button[data-testid=control-button-shuffle]');
+                        var sb=findShuffleBtn();
                         sh.classList.toggle('spl-active',sb&&sb.getAttribute('aria-checked')==='true');
                     }
                     if(rp && (Date.now() - lastRepeatClick > 2000)){
-                        var rr=document.querySelector('aside[data-testid="now-playing-bar"] button[data-testid=control-button-repeat]') || document.querySelector('button[data-testid=control-button-repeat]');
-                        rp.classList.toggle('spl-active',rr&&rr.getAttribute('aria-checked')!=='false');
+                        var rr=findRepeatBtn();
+                        var realMode = rr ? (rr.getAttribute('aria-checked')||'false') : 'false';
+                        rp.classList.toggle('spl-active',realMode!=='false');
+                        setRepeatIcon(realMode);
                     }
                     if(lk){
                         var fb=document.querySelector('div[data-testid=now-playing-widget]>div:last-child>button');
